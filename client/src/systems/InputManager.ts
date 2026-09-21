@@ -11,6 +11,7 @@ export type DebugAnimationName =
 export class InputManager {
   private readonly pressedKeys = new Set<string>()
   private requestedDebugAnimation: DebugAnimationName | null = null
+  private requestedBombPlacement = false
 
   public constructor() {
     window.addEventListener('keydown', this.handleKeyDown)
@@ -40,6 +41,12 @@ export class InputManager {
     return animation
   }
 
+  public consumeBombPlacement(): boolean {
+    const shouldPlaceBomb = this.requestedBombPlacement
+    this.requestedBombPlacement = false
+    return shouldPlaceBomb
+  }
+
   public dispose(): void {
     window.removeEventListener('keydown', this.handleKeyDown)
     window.removeEventListener('keyup', this.handleKeyUp)
@@ -48,8 +55,9 @@ export class InputManager {
 
   private readonly handleKeyDown = (event: KeyboardEvent): void => {
     const debugAnimation = this.getDebugAnimation(event.code)
+    const isBombKey = event.code === 'Space'
 
-    if (!this.isMovementKey(event.code) && debugAnimation === null) {
+    if (!this.isMovementKey(event.code) && debugAnimation === null && !isBombKey) {
       return
     }
 
@@ -62,10 +70,14 @@ export class InputManager {
     if (debugAnimation !== null) {
       this.requestedDebugAnimation = debugAnimation
     }
+
+    if (isBombKey && !event.repeat) {
+      this.requestedBombPlacement = true
+    }
   }
 
   private readonly handleKeyUp = (event: KeyboardEvent): void => {
-    if (!this.isMovementKey(event.code)) {
+    if (!this.isMovementKey(event.code) && event.code !== 'Space') {
       return
     }
 

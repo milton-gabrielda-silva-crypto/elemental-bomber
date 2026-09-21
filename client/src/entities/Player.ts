@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import type { DebugAnimationName, MovementDirection } from '../systems/InputManager'
+import type { PowerUpType } from './PowerUp'
 import { Arena } from '../world/Arena'
 
 const oneShotAnimations = new Set<DebugAnimationName>([
@@ -21,6 +22,7 @@ export class Player {
   public gridX: number
   public gridY: number
   public readonly movementSpeed = 4
+  public bombExplosionRange = 2
 
   private readonly arena: Arena
   private readonly startPosition = new THREE.Vector3()
@@ -72,6 +74,12 @@ export class Player {
 
   public getCurrentAnimationName(): string {
     return this.currentAnimationName
+  }
+
+  public collectPowerUp(type: PowerUpType): void {
+    if (type === 'FIRE') {
+      this.bombExplosionRange += 1
+    }
   }
 
   private createObject(): THREE.Group {
