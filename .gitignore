@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.vite/
+.DS_Store
+*.blend1
+*.blend2
+cache_fluid_*/
