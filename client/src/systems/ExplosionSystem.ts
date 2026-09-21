@@ -12,7 +12,21 @@ interface ExplosionCell {
   segment: ExplosionSegment
 }
 
-export type ExplosionCellHandler = (gridX: number, gridY: number) => void
+export type ExplosionCellHandler = (
+  gridX: number,
+  gridY: number,
+) => void
+
+export type WaterCellChecker = (
+  gridX: number,
+  gridY: number,
+) => boolean
+
+export type WaterImpactHandler = (
+  gridX: number,
+  gridY: number,
+  segment: ExplosionSegment,
+) => void
 
 export interface DestroyedDestructibleCell {
   gridX: number
@@ -21,74 +35,246 @@ export interface DestroyedDestructibleCell {
 
 export class ExplosionSystem {
   private readonly explosions: ActiveExplosion[] = []
+
   private readonly destroyedDestructibleCells: DestroyedDestructibleCell[] = []
+
   private readonly explosionDuration = 0.5
+
   private readonly arena: Arena
+
   private readonly onExplosionCell: ExplosionCellHandler
 
-  public constructor(arena: Arena, onExplosionCell: ExplosionCellHandler = () => undefined) {
+  private readonly isWaterAt: WaterCellChecker
+
+  private readonly onWaterImpact: WaterImpactHandler
+
+  public constructor(
+    arena: Arena,
+    onExplosionCell: ExplosionCellHandler = () => undefined,
+    isWaterAt: WaterCellChecker = () => false,
+    onWaterImpact: WaterImpactHandler = () => undefined,
+  ) {
     this.arena = arena
     this.onExplosionCell = onExplosionCell
+    this.isWaterAt = isWaterAt
+    this.onWaterImpact = onWaterImpact
   }
 
-  public createExplosion(gridX: number, gridY: number, blastRange = 2): void {
-    this.getExplosionCells(gridX, gridY, blastRange).forEach((cell) => {
-      const explosion = new Explosion(cell.gridX, cell.gridY, cell.segment)
-      explosion.object.position.copy(this.arena.gridToWorld(cell.gridX, cell.gridY))
-      this.arena.object.add(explosion.object)
-      this.explosions.push({ explosion, remainingLifetime: this.explosionDuration })
-      this.onExplosionCell(cell.gridX, cell.gridY)
+  public createExplosion(
+    gridX: number,
+    gridY: number,
+    blastRange = 2,
+  ): void {
+    if (
+      this.isWaterAt(
+        gridX,
+        gridY,
+      )
+    ) {
+      this.onWaterImpact(
+        gridX,
+        gridY,
+        'center',
+      )
+
+      return
+    }
+
+    this.getExplosionCells(
+      gridX,
+      gridY,
+      blastRange,
+    ).forEach((cell) => {
+      const explosion =
+        new Explosion(
+          cell.gridX,
+          cell.gridY,
+          cell.segment,
+        )
+
+      explosion.object.position.copy(
+        this.arena.gridToWorld(
+          cell.gridX,
+          cell.gridY,
+        ),
+      )
+
+      this.arena.object.add(
+        explosion.object,
+      )
+
+      this.explosions.push({
+        explosion,
+        remainingLifetime:
+          this.explosionDuration,
+      })
+
+      this.onExplosionCell(
+        cell.gridX,
+        cell.gridY,
+      )
     })
   }
 
-  public update(deltaTime: number): void {
-    for (let index = this.explosions.length - 1; index >= 0; index -= 1) {
-      const activeExplosion = this.explosions[index]
-      activeExplosion.remainingLifetime -= deltaTime
-      const lifeProgress = 1 - Math.max(activeExplosion.remainingLifetime, 0) / this.explosionDuration
-      activeExplosion.explosion.update(lifeProgress)
+  public update(
+    deltaTime: number,
+  ): void {
+    for (
+      let index =
+        this.explosions.length - 1;
+      index >= 0;
+      index -= 1
+    ) {
+      const activeExplosion =
+        this.explosions[index]
 
-      if (activeExplosion.remainingLifetime <= 0) {
+      activeExplosion.remainingLifetime -=
+        deltaTime
+
+      const lifeProgress =
+        1 -
+        Math.max(
+          activeExplosion.remainingLifetime,
+          0,
+        ) /
+          this.explosionDuration
+
+      activeExplosion.explosion.update(
+        lifeProgress,
+      )
+
+      if (
+        activeExplosion.remainingLifetime <=
+        0
+      ) {
         activeExplosion.explosion.object.removeFromParent()
-        this.explosions.splice(index, 1)
+
+        this.explosions.splice(
+          index,
+          1,
+        )
       }
     }
   }
 
   public consumeDestroyedDestructibleCells(): DestroyedDestructibleCell[] {
-    return this.destroyedDestructibleCells.splice(0)
+    return this.destroyedDestructibleCells.splice(
+      0,
+    )
   }
 
-  private getExplosionCells(gridX: number, gridY: number, blastRange: number): ExplosionCell[] {
-    const cells: ExplosionCell[] = [{ gridX, gridY, segment: 'center' }]
+  private getExplosionCells(
+    gridX: number,
+    gridY: number,
+    blastRange: number,
+  ): ExplosionCell[] {
+    const cells: ExplosionCell[] = [
+      {
+        gridX,
+        gridY,
+        segment: 'center',
+      },
+    ]
+
     const directions = [
-      { deltaX: 0, deltaY: -1, segment: 'vertical' },
-      { deltaX: 0, deltaY: 1, segment: 'vertical' },
-      { deltaX: -1, deltaY: 0, segment: 'horizontal' },
-      { deltaX: 1, deltaY: 0, segment: 'horizontal' },
+      {
+        deltaX: 0,
+        deltaY: -1,
+        segment: 'vertical',
+      },
+      {
+        deltaX: 0,
+        deltaY: 1,
+        segment: 'vertical',
+      },
+      {
+        deltaX: -1,
+        deltaY: 0,
+        segment: 'horizontal',
+      },
+      {
+        deltaX: 1,
+        deltaY: 0,
+        segment: 'horizontal',
+      },
     ] as const
 
-    directions.forEach(({ deltaX, deltaY, segment }) => {
-      for (let distance = 1; distance <= blastRange; distance += 1) {
-        const targetGridX = gridX + deltaX * distance
-        const targetGridY = gridY + deltaY * distance
+    directions.forEach(
+      ({
+        deltaX,
+        deltaY,
+        segment,
+      }) => {
+        for (
+          let distance = 1;
+          distance <= blastRange;
+          distance += 1
+        ) {
+          const targetGridX =
+            gridX +
+            deltaX * distance
 
-        const cellType = this.arena.getCellType(targetGridX, targetGridY)
+          const targetGridY =
+            gridY +
+            deltaY * distance
 
-        if (cellType === CellType.Wall || cellType === null) {
-          break
-        }
+          const cellType =
+            this.arena.getCellType(
+              targetGridX,
+              targetGridY,
+            )
 
-        cells.push({ gridX: targetGridX, gridY: targetGridY, segment })
-
-        if (cellType === CellType.Destructible) {
-          if (this.arena.destroyDestructibleBlock(targetGridX, targetGridY)) {
-            this.destroyedDestructibleCells.push({ gridX: targetGridX, gridY: targetGridY })
+          if (
+            cellType === CellType.Wall ||
+            cellType === null
+          ) {
+            break
           }
-          break
+
+          if (
+            this.isWaterAt(
+              targetGridX,
+              targetGridY,
+            )
+          ) {
+            this.onWaterImpact(
+              targetGridX,
+              targetGridY,
+              segment,
+            )
+
+            break
+          }
+
+          cells.push({
+            gridX: targetGridX,
+            gridY: targetGridY,
+            segment,
+          })
+
+          if (
+            cellType ===
+            CellType.Destructible
+          ) {
+            if (
+              this.arena.destroyDestructibleBlock(
+                targetGridX,
+                targetGridY,
+              )
+            ) {
+              this.destroyedDestructibleCells.push(
+                {
+                  gridX: targetGridX,
+                  gridY: targetGridY,
+                },
+              )
+            }
+
+            break
+          }
         }
-      }
-    })
+      },
+    )
 
     return cells
   }

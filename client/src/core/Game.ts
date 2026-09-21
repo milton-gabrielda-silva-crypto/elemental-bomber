@@ -8,9 +8,12 @@ import { ExplosionSystem } from '../systems/ExplosionSystem'
 import { InputManager } from '../systems/InputManager'
 import { PowerUpSystem } from '../systems/PowerUpSystem'
 import { ExitSystem } from '../systems/ExitSystem'
+import { WaterSystem } from '../systems/WaterSystem'
+import { SteamSystem } from '../systems/SteamSystem'
 import { Arena } from '../world/Arena'
 import { LevelManager } from '../levels/LevelManager'
 import type { LevelConfig } from '../levels/LevelConfig'
+import { BombType } from '../entities/Bomb'
 
 export class Game {
   private readonly renderer: THREE.WebGLRenderer
@@ -28,6 +31,8 @@ export class Game {
   private enemySystem!: EnemySystem
   private powerUpSystem!: PowerUpSystem
   private exitSystem!: ExitSystem
+  private waterSystem!: WaterSystem
+  private steamSystem!: SteamSystem
 
   private readonly animationDebugElement: HTMLDivElement
   private readonly healthHudElement: HTMLDivElement
@@ -257,16 +262,71 @@ export class Game {
       this.player.gridY,
     )
 
+    this.waterSystem =
+      new WaterSystem(
+        this.arena,
+        (gridX, gridY) => {
+          console.info(
+            `[WaterSystem] Water reached (${gridX}, ${gridY}).`,
+          )
+        },
+      )
+
+    this.steamSystem =
+      new SteamSystem(
+        this.arena,
+        (gridX, gridY) => {
+          console.info(
+            `[Game] Steam created at (${gridX}, ${gridY}).`,
+          )
+        },
+      )
+
     this.explosionSystem =
       new ExplosionSystem(
         this.arena,
+
         (gridX, gridY) => {
           this.enemySystem.handleExplosionCell(
             gridX,
             gridY,
           )
         },
+
+        (gridX, gridY) => {
+          return this.waterSystem.isWaterAt(
+            gridX,
+            gridY,
+          )
+        },
+
+        (gridX, gridY) => {
+          const removed =
+            this.waterSystem.removeWaterAt(
+              gridX,
+              gridY,
+            )
+
+          if (!removed) {
+            return
+          }
+
+          this.steamSystem.createSteam(
+            gridX,
+            gridY,
+          )
+
+          console.info(
+            `[Game] Fire met water at (${gridX}, ${gridY}). Water converted to steam.`,
+          )
+        },
       )
+
+    this.player.setWaterChecker(
+      this.waterSystem.isWaterAt.bind(
+        this.waterSystem,
+      ),
+    )
 
     this.powerUpSystem =
       new PowerUpSystem(
@@ -287,11 +347,24 @@ export class Game {
     this.bombSystem =
       new BombSystem(
         this.arena,
+
         (gridX, gridY) => {
           this.explosionSystem.createExplosion(
             gridX,
             gridY,
             this.player.bombExplosionRange,
+          )
+        },
+
+        (gridX, gridY) => {
+          console.info(
+            `[Game] Water bomb detonated at (${gridX}, ${gridY}).`,
+          )
+
+          this.waterSystem.createWater(
+            gridX,
+            gridY,
+            2,
           )
         },
       )
@@ -326,8 +399,7 @@ export class Game {
 
     for (
       let index = 0;
-      index <
-      this.player.maxHealth;
+      index < this.player.maxHealth;
       index += 1
     ) {
       if (
@@ -532,7 +604,14 @@ export class Game {
           this.player.gridX,
           this.player.gridY,
           this.player.bombMaxCount,
+          BombType.Fire,
         )
+      }
+
+      if (
+        this.inputManager.consumeWaterPlacement()
+      ) {
+        this.tryPlaceWaterBomb()
       }
 
       this.bombSystem.update(
@@ -543,10 +622,27 @@ export class Game {
         deltaTime,
       )
 
+      this.waterSystem.update(
+        deltaTime,
+      )
+
+      this.steamSystem.update(
+        deltaTime,
+      )
+
+      this.player.object.visible =
+        !this.steamSystem.isSteamAt(
+          this.player.gridX,
+          this.player.gridY,
+        )
+
       this.explosionSystem
         .consumeDestroyedDestructibleCells()
         .forEach(
-          ({ gridX, gridY }) => {
+          ({
+            gridX,
+            gridY,
+          }) => {
             this.powerUpSystem.trySpawnPowerUp(
               gridX,
               gridY,
@@ -612,6 +708,36 @@ export class Game {
     this.renderer.render(
       this.sceneManager.scene,
       this.cameraManager.camera,
+    )
+  }
+
+  private tryPlaceWaterBomb(): void {
+    if (
+      this.player.waterPower <= 0
+    ) {
+      console.info(
+        '[Game] Water bomb unavailable. Collect a Water power-up first.',
+      )
+
+      return
+    }
+
+    const placed =
+      this.bombSystem.placeBomb(
+        this.player.gridX,
+        this.player.gridY,
+        this.player.bombMaxCount,
+        BombType.Water,
+      )
+
+    if (!placed) {
+      return
+    }
+
+    this.player.waterPower -= 1
+
+    console.info(
+      `[Game] Water bomb placed. Remaining water power: ${this.player.waterPower}`,
     )
   }
 
