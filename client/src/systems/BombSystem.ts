@@ -19,10 +19,14 @@ export class BombSystem {
     this.onBombDetonate = onBombDetonate
   }
 
-  public placeBomb(gridX: number, gridY: number): boolean {
+  public get activeBombCount(): number {
+    return this.bombs.size
+  }
+
+  public placeBomb(gridX: number, gridY: number, maxBombCount: number): boolean {
     const cellKey = this.getCellKey(gridX, gridY)
 
-    if (this.bombs.has(cellKey)) {
+    if (this.bombs.has(cellKey) || this.activeBombCount >= maxBombCount) {
       return false
     }
 

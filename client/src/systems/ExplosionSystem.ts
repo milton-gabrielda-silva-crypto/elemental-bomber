@@ -12,6 +12,8 @@ interface ExplosionCell {
   segment: ExplosionSegment
 }
 
+export type ExplosionCellHandler = (gridX: number, gridY: number) => void
+
 export interface DestroyedDestructibleCell {
   gridX: number
   gridY: number
@@ -22,9 +24,11 @@ export class ExplosionSystem {
   private readonly destroyedDestructibleCells: DestroyedDestructibleCell[] = []
   private readonly explosionDuration = 0.5
   private readonly arena: Arena
+  private readonly onExplosionCell: ExplosionCellHandler
 
-  public constructor(arena: Arena) {
+  public constructor(arena: Arena, onExplosionCell: ExplosionCellHandler = () => undefined) {
     this.arena = arena
+    this.onExplosionCell = onExplosionCell
   }
 
   public createExplosion(gridX: number, gridY: number, blastRange = 2): void {
@@ -33,6 +37,7 @@ export class ExplosionSystem {
       explosion.object.position.copy(this.arena.gridToWorld(cell.gridX, cell.gridY))
       this.arena.object.add(explosion.object)
       this.explosions.push({ explosion, remainingLifetime: this.explosionDuration })
+      this.onExplosionCell(cell.gridX, cell.gridY)
     })
   }
 

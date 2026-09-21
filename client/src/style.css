@@ -28,11 +28,180 @@ canvas {
   position: fixed;
   top: 16px;
   left: 16px;
-  z-index: 1;
+  z-index: 10;
   padding: 8px 12px;
   border: 1px solid #5d6b7a;
   border-radius: 4px;
   color: #f8fafc;
   background: rgb(16 19 26 / 85%);
   font: 600 14px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.health-hud {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 12px;
+  background: rgb(16 19 26 / 78%);
+  box-shadow:
+    0 8px 24px rgb(0 0 0 / 25%),
+    inset 0 1px 0 rgb(255 255 255 / 8%);
+  backdrop-filter: blur(8px);
+}
+
+.health-hud__label {
+  color: rgb(255 255 255 / 72%);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.health-hud__hearts {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.health-hud__hearts span {
+  display: inline-block;
+}
+
+.health-hud.is-dead {
+  opacity: 0.65;
+}
+
+/* =========================
+   GAME OVER
+   ========================= */
+
+.game-over {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgb(5 7 11 / 72%);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.45s ease,
+    backdrop-filter 0.45s ease;
+  backdrop-filter: blur(0);
+}
+
+.game-over.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  backdrop-filter: blur(7px);
+}
+
+.game-over__panel {
+  width: min(420px, 100%);
+  padding: 42px 36px 36px;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      180deg,
+      rgb(28 31 40 / 96%),
+      rgb(13 16 23 / 98%)
+    );
+  box-shadow:
+    0 24px 80px rgb(0 0 0 / 50%),
+    inset 0 1px 0 rgb(255 255 255 / 8%);
+  text-align: center;
+  transform: translateY(18px) scale(0.97);
+  transition: transform 0.45s ease;
+}
+
+.game-over.is-visible .game-over__panel {
+  transform: translateY(0) scale(1);
+}
+
+.game-over__eyebrow {
+  margin-bottom: 10px;
+  color: rgb(255 255 255 / 48%);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+}
+
+.game-over__title {
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(42px, 8vw, 64px);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  text-shadow: 0 4px 24px rgb(0 0 0 / 45%);
+}
+
+.game-over__message {
+  margin: 18px 0 30px;
+  color: rgb(255 255 255 / 60%);
+  font-size: 15px;
+}
+
+.game-over__restart {
+  min-width: 180px;
+  padding: 13px 24px;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 10px;
+  color: #ffffff;
+  background: rgb(255 255 255 / 8%);
+  cursor: pointer;
+  font: 800 13px/1 ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.game-over__restart:hover {
+  background: rgb(255 255 255 / 14%);
+  border-color: rgb(255 255 255 / 38%);
+  transform: translateY(-2px);
+}
+
+.game-over__restart:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 600px) {
+  .animation-debug {
+    top: 10px;
+    left: 10px;
+    padding: 6px 9px;
+    font-size: 11px;
+  }
+
+  .health-hud {
+    top: 10px;
+    right: 10px;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .health-hud__label {
+    font-size: 9px;
+  }
+
+  .health-hud__hearts {
+    font-size: 20px;
+  }
+
+  .game-over__panel {
+    padding: 34px 24px 28px;
+  }
 }
