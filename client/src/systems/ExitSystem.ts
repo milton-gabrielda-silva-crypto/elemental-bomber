@@ -1,28 +1,40 @@
 import { Arena } from '../world/Arena'
 import { Exit } from '../entities/Exit'
 
+export interface ExitPosition {
+  gridX: number
+  gridY: number
+}
+
 export class ExitSystem {
   private readonly arena: Arena
   private readonly exit: Exit
-
-  private readonly exitGridX = 9
-  private readonly exitGridY = 11
+  private readonly exitPosition: ExitPosition
 
   private revealed = false
   private completed = false
 
-  public constructor(arena: Arena) {
+  public constructor(
+    arena: Arena,
+    exitPosition: ExitPosition,
+  ) {
     this.arena = arena
-    this.exit = new Exit(arena.cellSize)
+    this.exitPosition = exitPosition
+
+    this.exit = new Exit(
+      arena.cellSize,
+    )
 
     this.exit.object.position.copy(
       this.arena.gridToWorld(
-        this.exitGridX,
-        this.exitGridY,
+        this.exitPosition.gridX,
+        this.exitPosition.gridY,
       ),
     )
 
-    this.arena.object.add(this.exit.object)
+    this.arena.object.add(
+      this.exit.object,
+    )
   }
 
   public update(
@@ -30,15 +42,22 @@ export class ExitSystem {
     playerGridX: number,
     playerGridY: number,
   ): void {
-    this.exit.update(deltaTime)
+    this.exit.update(
+      deltaTime,
+    )
 
-    if (!this.revealed || this.completed) {
+    if (
+      !this.revealed ||
+      this.completed
+    ) {
       return
     }
 
     if (
-      playerGridX === this.exitGridX &&
-      playerGridY === this.exitGridY
+      playerGridX ===
+        this.exitPosition.gridX &&
+      playerGridY ===
+        this.exitPosition.gridY
     ) {
       this.completed = true
     }
@@ -50,10 +69,11 @@ export class ExitSystem {
     }
 
     this.revealed = true
+
     this.exit.show()
 
     console.info(
-      `[ExitSystem] Exit revealed at (${this.exitGridX}, ${this.exitGridY}).`,
+      `[ExitSystem] Exit revealed at (${this.exitPosition.gridX}, ${this.exitPosition.gridY}).`,
     )
   }
 
@@ -65,13 +85,10 @@ export class ExitSystem {
     return this.completed
   }
 
-  public getGridPosition(): {
-    gridX: number
-    gridY: number
-  } {
+  public getGridPosition(): ExitPosition {
     return {
-      gridX: this.exitGridX,
-      gridY: this.exitGridY,
+      gridX: this.exitPosition.gridX,
+      gridY: this.exitPosition.gridY,
     }
   }
 }
