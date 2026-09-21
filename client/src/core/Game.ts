@@ -14,6 +14,7 @@ import { Arena } from '../world/Arena'
 import { LevelManager } from '../levels/LevelManager'
 import type { LevelConfig } from '../levels/LevelConfig'
 import { BombType } from '../entities/Bomb'
+import { WindSystem } from '../systems/WindSystem'
 
 export class Game {
   private readonly renderer: THREE.WebGLRenderer
@@ -33,6 +34,7 @@ export class Game {
   private exitSystem!: ExitSystem
   private waterSystem!: WaterSystem
   private steamSystem!: SteamSystem
+  private windSystem!: WindSystem
 
   private readonly animationDebugElement: HTMLDivElement
   private readonly healthHudElement: HTMLDivElement
@@ -320,6 +322,11 @@ export class Game {
             `[Game] Fire met water at (${gridX}, ${gridY}). Water converted to steam.`,
           )
         },
+      )
+
+    this.windSystem =
+      new WindSystem(
+        this.arena,
       )
 
     this.player.setWaterChecker(
@@ -614,6 +621,12 @@ export class Game {
         this.tryPlaceWaterBomb()
       }
 
+      if (
+        this.inputManager.consumeWind()
+      ) {
+        this.tryUseWind()
+      }
+
       this.bombSystem.update(
         deltaTime,
       )
@@ -627,6 +640,10 @@ export class Game {
       )
 
       this.steamSystem.update(
+        deltaTime,
+      )
+
+      this.windSystem.update(
         deltaTime,
       )
 
@@ -738,6 +755,43 @@ export class Game {
 
     console.info(
       `[Game] Water bomb placed. Remaining water power: ${this.player.waterPower}`,
+    )
+  }
+
+  private tryUseWind(): void {
+    if (
+      this.player.windPower <= 0
+    ) {
+      console.info(
+        '[Game] Wind unavailable. Collect a Wind power-up first.',
+      )
+
+      return
+    }
+
+    const pushed =
+      this.bombSystem.pushBomb(
+        this.player.gridX,
+        this.player.gridY,
+        this.player.getFacingDirection(),
+        3,
+      )
+
+    if (!pushed) {
+      return
+    }
+
+    this.player.windPower -= 1
+
+    this.windSystem.createGust(
+      this.player.gridX,
+      this.player.gridY,
+      this.player.getFacingDirection(),
+      3,
+    )
+
+    console.info(
+      `[Game] Wind used. Remaining wind power: ${this.player.windPower}`,
     )
   }
 
