@@ -7,17 +7,23 @@ export type EnemyPlayerCollisionHandler = (
 
 export class EnemySystem {
   private readonly arena: Arena
-  private readonly onPlayerCollision: EnemyPlayerCollisionHandler
+
+  private readonly onPlayerCollision:
+    EnemyPlayerCollisionHandler
+
   private enemies: Enemy[] = []
+
   private readonly playerContactEnemies =
     new Set<Enemy>()
 
   public constructor(
     arena: Arena,
-    onPlayerCollision: EnemyPlayerCollisionHandler,
+    onPlayerCollision:
+      EnemyPlayerCollisionHandler,
   ) {
     this.arena = arena
-    this.onPlayerCollision = onPlayerCollision
+    this.onPlayerCollision =
+      onPlayerCollision
   }
 
   public spawnInitialEnemy(
@@ -30,7 +36,9 @@ export class EnemySystem {
         playerGridY,
       )
 
-    if (spawnCell === null) {
+    if (
+      spawnCell === null
+    ) {
       return null
     }
 
@@ -56,16 +64,21 @@ export class EnemySystem {
     for (
       const candidate of candidates
     ) {
-      if (spawnedCount >= count) {
+      if (
+        spawnedCount >= count
+      ) {
         break
       }
 
-      const enemy = this.spawnEnemy(
-        candidate.gridX,
-        candidate.gridY,
-      )
+      const enemy =
+        this.spawnEnemy(
+          candidate.gridX,
+          candidate.gridY,
+        )
 
-      if (enemy !== null) {
+      if (
+        enemy !== null
+      ) {
         spawnedCount += 1
       }
     }
@@ -95,13 +108,17 @@ export class EnemySystem {
       return null
     }
 
-    const enemy = new Enemy(
-      this.arena,
-      gridX,
-      gridY,
+    const enemy =
+      new Enemy(
+        this.arena,
+        gridX,
+        gridY,
+      )
+
+    this.enemies.push(
+      enemy,
     )
 
-    this.enemies.push(enemy)
     this.arena.object.add(
       enemy.object,
     )
@@ -118,32 +135,55 @@ export class EnemySystem {
     playerGridX: number,
     playerGridY: number,
   ): void {
+    /*
+     * The Enemy now receives the player's
+     * current grid position and calculates
+     * a path toward the player.
+     */
     this.enemies.forEach(
-      (enemy) => enemy.update(deltaTime),
+      (enemy) => {
+        enemy.update(
+          deltaTime,
+          playerGridX,
+          playerGridY,
+        )
+      },
     )
 
     this.enemies.forEach(
       (enemy) => {
-        if (!enemy.isAlive) {
+        if (
+          !enemy.isAlive
+        ) {
           return
         }
 
         const colliding =
-          enemy.gridX === playerGridX &&
-          enemy.gridY === playerGridY
+          enemy.gridX ===
+            playerGridX &&
+          enemy.gridY ===
+            playerGridY
 
         if (
           colliding &&
-          !this.playerContactEnemies.has(enemy)
+          !this.playerContactEnemies.has(
+            enemy,
+          )
         ) {
           this.playerContactEnemies.add(
             enemy,
           )
 
+          console.warn(
+            `[EnemySystem] Enemy/player collision at (${enemy.gridX}, ${enemy.gridY}).`,
+          )
+
           this.onPlayerCollision(
             enemy,
           )
-        } else if (!colliding) {
+        } else if (
+          !colliding
+        ) {
           this.playerContactEnemies.delete(
             enemy,
           )
@@ -184,7 +224,9 @@ export class EnemySystem {
     this.enemies =
       this.enemies.filter(
         (enemy) => {
-          if (enemy.isAlive) {
+          if (
+            enemy.isAlive
+          ) {
             return true
           }
 
@@ -228,12 +270,14 @@ export class EnemySystem {
 
     for (
       let gridY = 0;
-      gridY < this.arena.size;
+      gridY <
+      this.arena.size;
       gridY += 1
     ) {
       for (
         let gridX = 0;
-        gridX < this.arena.size;
+        gridX <
+        this.arena.size;
         gridX += 1
       ) {
         if (
@@ -264,10 +308,12 @@ export class EnemySystem {
 
         const distance =
           Math.abs(
-            gridX - playerGridX,
+            gridX -
+              playerGridX,
           ) +
           Math.abs(
-            gridY - playerGridY,
+            gridY -
+              playerGridY,
           )
 
         cells.push({

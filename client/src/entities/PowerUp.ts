@@ -7,6 +7,7 @@ export const PowerUpType = {
   Water: 'WATER',
   Wind: 'WIND',
   Ice: 'ICE',
+  Electricity: 'ELECTRICITY',
 } as const
 
 export type PowerUpType =
@@ -14,11 +15,8 @@ export type PowerUpType =
 
 export class PowerUp {
   public readonly object: THREE.Group
-
   public readonly gridX: number
-
   public readonly gridY: number
-
   public readonly type: PowerUpType
 
   private elapsedTime = 0
@@ -31,179 +29,142 @@ export class PowerUp {
     this.gridX = gridX
     this.gridY = gridY
     this.type = type
-    this.object =
-      this.createObject()
+    this.object = this.createObject()
   }
 
   public update(
     deltaTime: number,
   ): void {
-    this.elapsedTime +=
-      deltaTime
+    this.elapsedTime += deltaTime
 
-    this.object.position.y =
+    const bob =
       Math.sin(
         this.elapsedTime * 3,
-      ) * 0.06
-
-    this.object.rotation.y +=
-      deltaTime * 0.8
+      ) * 0.08
 
     const pulse =
       1 +
       Math.sin(
         this.elapsedTime * 4,
-      ) *
-        0.08
+      ) * 0.08
+
+    this.object.position.y =
+      0.18 + bob
 
     this.object.scale.setScalar(
       pulse,
     )
+
+    this.object.rotation.y +=
+      deltaTime * 0.8
   }
 
-  private createObject():
-    THREE.Group {
+  private createObject(): THREE.Group {
     const powerUp =
       new THREE.Group()
 
-    if (
-      this.type ===
-      PowerUpType.Bomb
-    ) {
-      return this.createBombObject(
-        powerUp,
-      )
-    }
+    switch (this.type) {
+      case PowerUpType.Fire:
+        return this.createFire(
+          powerUp,
+        )
 
-    if (
-      this.type ===
-      PowerUpType.Speed
-    ) {
-      return this.createSpeedObject(
-        powerUp,
-      )
-    }
+      case PowerUpType.Bomb:
+        return this.createBomb(
+          powerUp,
+        )
 
-    if (
-      this.type ===
-      PowerUpType.Water
-    ) {
-      return this.createWaterObject(
-        powerUp,
-      )
-    }
+      case PowerUpType.Speed:
+        return this.createSpeed(
+          powerUp,
+        )
 
-    if (
-      this.type ===
-      PowerUpType.Wind
-    ) {
-      return this.createWindObject(
-        powerUp,
-      )
-    }
+      case PowerUpType.Water:
+        return this.createWater(
+          powerUp,
+        )
 
-    if (
-      this.type ===
-      PowerUpType.Ice
-    ) {
-      return this.createIceObject(
-        powerUp,
-      )
-    }
+      case PowerUpType.Wind:
+        return this.createWind(
+          powerUp,
+        )
 
-    return this.createFireObject(
-      powerUp,
-    )
+      case PowerUpType.Ice:
+        return this.createIce(
+          powerUp,
+        )
+
+      case PowerUpType.Electricity:
+        return this.createElectricity(
+          powerUp,
+        )
+    }
   }
 
-  private createFireObject(
+  private createFire(
     powerUp: THREE.Group,
   ): THREE.Group {
-    const fireMaterial =
+    const material =
       new THREE.MeshStandardMaterial({
-        color: 0xff8a1f,
-        emissive: 0xb83200,
-        emissiveIntensity: 2,
-        roughness: 0.35,
+        color: 0xff5a00,
+        emissive: 0xff2200,
+        emissiveIntensity: 3,
+        roughness: 0.3,
       })
 
-    const glowMaterial =
+    const innerMaterial =
       new THREE.MeshStandardMaterial({
-        color: 0xffe066,
+        color: 0xffd84a,
         emissive: 0xff7a00,
-        emissiveIntensity: 2.5,
-        roughness: 0.25,
+        emissiveIntensity: 4,
+        roughness: 0.2,
       })
+
+    const body =
+      new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.18,
+          16,
+          12,
+        ),
+        material,
+      )
 
     const flame =
       new THREE.Mesh(
         new THREE.ConeGeometry(
-          0.17,
-          0.4,
+          0.12,
+          0.3,
           8,
         ),
-        fireMaterial,
+        innerMaterial,
       )
 
-    const ember =
-      new THREE.Mesh(
-        new THREE.SphereGeometry(
-          0.11,
-          16,
-          12,
-        ),
-        glowMaterial,
-      )
-
-    const halo =
-      new THREE.Mesh(
-        new THREE.TorusGeometry(
-          0.25,
-          0.035,
-          8,
-          24,
-        ),
-        glowMaterial,
-      )
-
-    flame.position.y =
-      0.42
-
-    ember.position.y =
-      0.62
-
-    halo.position.y =
-      0.28
-
-    halo.rotation.x =
-      Math.PI / 2
+    body.position.y = 0.18
+    flame.position.y = 0.42
 
     powerUp.add(
+      body,
       flame,
-      ember,
-      halo,
     )
 
     return powerUp
   }
 
-  private createBombObject(
+  private createBomb(
     powerUp: THREE.Group,
   ): THREE.Group {
-    const bombMaterial =
+    const bodyMaterial =
       new THREE.MeshStandardMaterial({
-        color: 0x26313c,
-        emissive: 0x163b55,
-        emissiveIntensity: 1.8,
-        roughness: 0.3,
+        color: 0x222831,
+        roughness: 0.35,
       })
 
     const fuseMaterial =
       new THREE.MeshStandardMaterial({
-        color: 0xffa32b,
-        emissive: 0xff5a00,
-        emissiveIntensity: 2.5,
-        roughness: 0.25,
+        color: 0xff9a2e,
+        emissive: 0xff4500,
+        emissiveIntensity: 3,
       })
 
     const body =
@@ -213,7 +174,7 @@ export class PowerUp {
           20,
           14,
         ),
-        bombMaterial,
+        bodyMaterial,
       )
 
     const fuse =
@@ -227,502 +188,282 @@ export class PowerUp {
         fuseMaterial,
       )
 
-    const spark =
-      new THREE.Mesh(
-        new THREE.SphereGeometry(
-          0.055,
-          12,
-          8,
-        ),
-        fuseMaterial,
-      )
-
-    const halo =
-      new THREE.Mesh(
-        new THREE.TorusGeometry(
-          0.29,
-          0.03,
-          8,
-          24,
-        ),
-        fuseMaterial,
-      )
-
-    body.position.y =
-      0.3
-
-    fuse.position.y =
-      0.58
-
-    fuse.rotation.z =
-      -0.25
-
-    spark.position.set(
-      0.02,
-      0.68,
-      0,
-    )
-
-    halo.position.y =
-      0.3
-
-    halo.rotation.x =
-      Math.PI / 2
+    body.position.y = 0.22
+    fuse.position.y = 0.52
 
     powerUp.add(
       body,
       fuse,
-      spark,
-      halo,
     )
 
     return powerUp
   }
 
-  private createSpeedObject(
+  private createSpeed(
     powerUp: THREE.Group,
   ): THREE.Group {
-    const speedMaterial =
+    const material =
       new THREE.MeshStandardMaterial({
-        color: 0x45e6c3,
-        emissive: 0x00a88a,
-        emissiveIntensity: 2.5,
+        color: 0x55ff77,
+        emissive: 0x11aa44,
+        emissiveIntensity: 3,
         roughness: 0.25,
       })
 
-    const glowMaterial =
-      new THREE.MeshStandardMaterial({
-        color: 0xd2fff4,
-        emissive: 0x32e6bf,
-        emissiveIntensity: 3,
-        roughness: 0.2,
-      })
-
-    const leftArrow =
+    const arrow =
       new THREE.Mesh(
         new THREE.ConeGeometry(
-          0.1,
-          0.34,
+          0.16,
+          0.42,
           4,
         ),
-        speedMaterial,
+        material,
       )
 
-    const rightArrow =
-      new THREE.Mesh(
-        new THREE.ConeGeometry(
-          0.1,
-          0.34,
-          4,
-        ),
-        speedMaterial,
-      )
+    arrow.rotation.z =
+      -Math.PI / 2
 
-    const halo =
-      new THREE.Mesh(
-        new THREE.TorusGeometry(
-          0.29,
-          0.03,
-          8,
-          24,
-        ),
-        glowMaterial,
-      )
-
-    leftArrow.position.set(
-      -0.12,
-      0.3,
-      0,
-    )
-
-    rightArrow.position.set(
-      0.12,
-      0.3,
-      0,
-    )
-
-    leftArrow.rotation.x =
-      Math.PI / 2
-
-    rightArrow.rotation.x =
-      Math.PI / 2
-
-    halo.position.y =
-      0.28
-
-    halo.rotation.x =
-      Math.PI / 2
+    arrow.position.y = 0.25
 
     powerUp.add(
-      leftArrow,
-      rightArrow,
-      halo,
+      arrow,
     )
 
     return powerUp
   }
 
-  private createWaterObject(
+  private createWater(
     powerUp: THREE.Group,
   ): THREE.Group {
-    const waterMaterial =
+    const material =
       new THREE.MeshStandardMaterial({
-        color: 0x35bfff,
-        emissive: 0x0077cc,
-        emissiveIntensity: 2.5,
-        roughness: 0.18,
-        metalness: 0.05,
-      })
-
-    const glowMaterial =
-      new THREE.MeshStandardMaterial({
-        color: 0xb8f3ff,
-        emissive: 0x18cfff,
-        emissiveIntensity: 3.5,
-        roughness: 0.12,
-      })
-
-    const darkWaterMaterial =
-      new THREE.MeshStandardMaterial({
-        color: 0x0879c9,
-        emissive: 0x004d99,
-        emissiveIntensity: 2,
-        roughness: 0.2,
-      })
-
-    const drop =
-      new THREE.Mesh(
-        new THREE.SphereGeometry(
-          0.2,
-          20,
-          16,
-        ),
-        waterMaterial,
-      )
-
-    drop.scale.set(
-      0.82,
-      1.25,
-      0.82,
-    )
-
-    drop.position.y =
-      0.38
-
-    const tip =
-      new THREE.Mesh(
-        new THREE.ConeGeometry(
-          0.13,
-          0.28,
-          12,
-        ),
-        waterMaterial,
-      )
-
-    tip.position.y =
-      0.68
-
-    const core =
-      new THREE.Mesh(
-        new THREE.SphereGeometry(
-          0.085,
-          16,
-          12,
-        ),
-        glowMaterial,
-      )
-
-    core.position.y =
-      0.42
-
-    const halo =
-      new THREE.Mesh(
-        new THREE.TorusGeometry(
-          0.29,
-          0.03,
-          8,
-          24,
-        ),
-        glowMaterial,
-      )
-
-    halo.position.y =
-      0.27
-
-    halo.rotation.x =
-      Math.PI / 2
-
-    const leftDrop =
-      new THREE.Mesh(
-        new THREE.SphereGeometry(
-          0.055,
-          12,
-          8,
-        ),
-        darkWaterMaterial,
-      )
-
-    const rightDrop =
-      new THREE.Mesh(
-        new THREE.SphereGeometry(
-          0.045,
-          12,
-          8,
-        ),
-        glowMaterial,
-      )
-
-    leftDrop.position.set(
-      -0.22,
-      0.38,
-      0,
-    )
-
-    rightDrop.position.set(
-      0.22,
-      0.5,
-      0,
-    )
-
-    powerUp.add(
-      drop,
-      tip,
-      core,
-      halo,
-      leftDrop,
-      rightDrop,
-    )
-
-    return powerUp
-  }
-
-  private createWindObject(
-    powerUp: THREE.Group,
-  ): THREE.Group {
-    const windMaterial =
-      new THREE.MeshStandardMaterial({
-        color: 0x9fe8ff,
-        emissive: 0x38bfff,
-        emissiveIntensity: 3,
-        roughness: 0.18,
-        transparent: true,
-        opacity: 0.9,
-      })
-
-    const glowMaterial =
-      new THREE.MeshStandardMaterial({
-        color: 0xeaffff,
-        emissive: 0x8cecff,
+        color: 0x25bfff,
+        emissive: 0x008cff,
         emissiveIntensity: 4,
-        roughness: 0.12,
-        transparent: true,
-        opacity: 0.85,
+        roughness: 0.15,
+        metalness: 0.1,
       })
 
     const ring =
       new THREE.Mesh(
         new THREE.TorusGeometry(
-          0.29,
-          0.035,
+          0.2,
+          0.045,
           8,
           24,
         ),
-        glowMaterial,
+        material,
       )
 
-    ring.position.y =
-      0.28
+    const drop =
+      new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.12,
+          16,
+          10,
+        ),
+        material,
+      )
 
     ring.rotation.x =
       Math.PI / 2
 
-    const gust =
-      new THREE.Mesh(
-        new THREE.TorusGeometry(
-          0.17,
-          0.045,
-          8,
-          20,
-          Math.PI * 1.45,
-        ),
-        windMaterial,
-      )
-
-    gust.position.y =
-      0.43
-
-    gust.rotation.x =
-      Math.PI / 2
-
-    gust.rotation.z =
-      -0.35
-
-    const gustTop =
-      new THREE.Mesh(
-        new THREE.TorusGeometry(
-          0.11,
-          0.035,
-          8,
-          20,
-          Math.PI * 1.3,
-        ),
-        glowMaterial,
-      )
-
-    gustTop.position.set(
-      0.08,
-      0.62,
-      0,
-    )
-
-    gustTop.rotation.x =
-      Math.PI / 2
-
-    gustTop.rotation.z =
-      0.25
-
-    const core =
-      new THREE.Mesh(
-        new THREE.SphereGeometry(
-          0.08,
-          16,
-          12,
-        ),
-        glowMaterial,
-      )
-
-    core.position.y =
-      0.4
+    ring.position.y = 0.2
+    drop.position.y = 0.35
 
     powerUp.add(
       ring,
-      gust,
-      gustTop,
-      core,
+      drop,
     )
 
     return powerUp
   }
 
-  private createIceObject(
+  private createWind(
+    powerUp: THREE.Group,
+  ): THREE.Group {
+    const material =
+      new THREE.MeshStandardMaterial({
+        color: 0x8de8ff,
+        emissive: 0x29c9ff,
+        emissiveIntensity: 3,
+        transparent: true,
+        opacity: 0.8,
+        roughness: 0.1,
+      })
+
+    const ring =
+      new THREE.Mesh(
+        new THREE.TorusGeometry(
+          0.22,
+          0.035,
+          8,
+          24,
+        ),
+        material,
+      )
+
+    const ring2 =
+      new THREE.Mesh(
+        new THREE.TorusGeometry(
+          0.15,
+          0.025,
+          8,
+          24,
+        ),
+        material,
+      )
+
+    ring.rotation.x =
+      Math.PI / 2
+
+    ring2.rotation.x =
+      Math.PI / 2
+
+    ring.position.y = 0.22
+    ring2.position.y = 0.22
+
+    powerUp.add(
+      ring,
+      ring2,
+    )
+
+    return powerUp
+  }
+
+  private createIce(
     powerUp: THREE.Group,
   ): THREE.Group {
     const iceMaterial =
       new THREE.MeshStandardMaterial({
-        color: 0x7ddfff,
-        emissive: 0x159bd0,
-        emissiveIntensity: 2.8,
-        roughness: 0.12,
-        metalness: 0.08,
+        color: 0x66d9ff,
+        emissive: 0x168dcc,
+        emissiveIntensity: 3,
+        roughness: 0.1,
+        metalness: 0.05,
         transparent: true,
-        opacity: 0.92,
-      })
-
-    const glowMaterial =
-      new THREE.MeshStandardMaterial({
-        color: 0xe8fbff,
-        emissive: 0x7ddfff,
-        emissiveIntensity: 4,
-        roughness: 0.08,
-        metalness: 0,
-        transparent: true,
-        opacity: 0.88,
+        opacity: 0.9,
       })
 
     const crystal =
       new THREE.Mesh(
         new THREE.OctahedronGeometry(
-          0.25,
+          0.22,
           1,
         ),
         iceMaterial,
       )
 
-    crystal.position.y =
-      0.43
-
-    crystal.scale.set(
-      0.78,
-      1.25,
-      0.78,
-    )
-
-    const crystalCore =
-      new THREE.Mesh(
-        new THREE.OctahedronGeometry(
-          0.11,
-          1,
-        ),
-        glowMaterial,
-      )
-
-    crystalCore.position.set(
-      0,
-      0.43,
-      0,
-    )
-
-    const halo =
+    const ring =
       new THREE.Mesh(
         new THREE.TorusGeometry(
-          0.29,
+          0.25,
           0.03,
           8,
           24,
         ),
-        glowMaterial,
-      )
-
-    halo.position.y =
-      0.28
-
-    halo.rotation.x =
-      Math.PI / 2
-
-    const shardLeft =
-      new THREE.Mesh(
-        new THREE.ConeGeometry(
-          0.055,
-          0.22,
-          6,
-        ),
         iceMaterial,
       )
 
-    shardLeft.position.set(
-      -0.21,
+    crystal.position.y = 0.28
+
+    ring.position.y = 0.25
+    ring.rotation.x =
+      Math.PI / 2
+
+    powerUp.add(
+      crystal,
+      ring,
+    )
+
+    return powerUp
+  }
+
+  private createElectricity(
+    powerUp: THREE.Group,
+  ): THREE.Group {
+    const electricMaterial =
+      new THREE.MeshStandardMaterial({
+        color: 0x9c7cff,
+        emissive: 0x6a2cff,
+        emissiveIntensity: 5,
+        roughness: 0.12,
+        metalness: 0.15,
+      })
+
+    const coreMaterial =
+      new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0xbda8ff,
+        emissiveIntensity: 8,
+        roughness: 0.05,
+      })
+
+    const core =
+      new THREE.Mesh(
+        new THREE.OctahedronGeometry(
+          0.16,
+          1,
+        ),
+        coreMaterial,
+      )
+
+    const ring =
+      new THREE.Mesh(
+        new THREE.TorusGeometry(
+          0.27,
+          0.035,
+          8,
+          24,
+        ),
+        electricMaterial,
+      )
+
+    const ring2 =
+      new THREE.Mesh(
+        new THREE.TorusGeometry(
+          0.18,
+          0.025,
+          8,
+          20,
+        ),
+        electricMaterial,
+      )
+
+    const bolt =
+      new THREE.Mesh(
+        new THREE.ConeGeometry(
+          0.08,
+          0.3,
+          4,
+        ),
+        coreMaterial,
+      )
+
+    core.position.y = 0.27
+
+    ring.position.y = 0.27
+    ring.rotation.x =
+      Math.PI / 2
+
+    ring2.position.y = 0.27
+    ring2.rotation.x =
+      Math.PI / 2
+
+    bolt.position.set(
+      0.16,
       0.42,
       0,
     )
 
-    shardLeft.rotation.z =
-      -0.35
-
-    const shardRight =
-      new THREE.Mesh(
-        new THREE.ConeGeometry(
-          0.05,
-          0.18,
-          6,
-        ),
-        glowMaterial,
-      )
-
-    shardRight.position.set(
-      0.2,
-      0.52,
-      0,
-    )
-
-    shardRight.rotation.z =
-      0.4
+    bolt.rotation.z =
+      -0.45
 
     powerUp.add(
-      crystal,
-      crystalCore,
-      halo,
-      shardLeft,
-      shardRight,
+      core,
+      ring,
+      ring2,
+      bolt,
     )
 
     return powerUp

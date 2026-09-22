@@ -24,6 +24,7 @@ export class InputManager {
   private requestedWaterPlacement = false
   private requestedWind = false
   private requestedIcePlacement = false
+  private requestedElectricityPlacement = false
 
   public constructor() {
     window.addEventListener(
@@ -124,6 +125,15 @@ export class InputManager {
     return shouldPlaceIce
   }
 
+  public consumeElectricityPlacement(): boolean {
+    const shouldPlaceElectricity =
+      this.requestedElectricityPlacement
+
+    this.requestedElectricityPlacement = false
+
+    return shouldPlaceElectricity
+  }
+
   public dispose(): void {
     window.removeEventListener(
       'keydown',
@@ -161,15 +171,28 @@ export class InputManager {
       event.code === 'KeyR' ||
       event.key.toLowerCase() === 'r'
 
-    /*
-     * Debug log specifically for R.
-     *
-     * This lets us verify that the browser is actually
-     * sending the R key to the game.
-     */
-    if (isIceKey) {
+    const isElectricityKey =
+      event.code === 'KeyT' ||
+      event.key.toLowerCase() === 't'
+
+    if (
+      isIceKey
+    ) {
       console.info(
         '[InputManager] R key detected.',
+        {
+          code: event.code,
+          key: event.key,
+          repeat: event.repeat,
+        },
+      )
+    }
+
+    if (
+      isElectricityKey
+    ) {
+      console.info(
+        '[InputManager] T key detected.',
         {
           code: event.code,
           key: event.key,
@@ -186,7 +209,8 @@ export class InputManager {
       !isBombKey &&
       !isWaterKey &&
       !isWindKey &&
-      !isIceKey
+      !isIceKey &&
+      !isElectricityKey
     ) {
       return
     }
@@ -203,7 +227,9 @@ export class InputManager {
       )
     }
 
-    if (debugAnimation !== null) {
+    if (
+      debugAnimation !== null
+    ) {
       this.requestedDebugAnimation =
         debugAnimation
     }
@@ -212,31 +238,47 @@ export class InputManager {
       isBombKey &&
       !event.repeat
     ) {
-      this.requestedBombPlacement = true
+      this.requestedBombPlacement =
+        true
     }
 
     if (
       isWaterKey &&
       !event.repeat
     ) {
-      this.requestedWaterPlacement = true
+      this.requestedWaterPlacement =
+        true
     }
 
     if (
       isWindKey &&
       !event.repeat
     ) {
-      this.requestedWind = true
+      this.requestedWind =
+        true
     }
 
     if (
       isIceKey &&
       !event.repeat
     ) {
-      this.requestedIcePlacement = true
+      this.requestedIcePlacement =
+        true
 
       console.info(
         '[InputManager] Ice placement requested.',
+      )
+    }
+
+    if (
+      isElectricityKey &&
+      !event.repeat
+    ) {
+      this.requestedElectricityPlacement =
+        true
+
+      console.info(
+        '[InputManager] Electricity placement requested.',
       )
     }
   }
@@ -248,6 +290,10 @@ export class InputManager {
       event.code === 'KeyR' ||
       event.key.toLowerCase() === 'r'
 
+    const isElectricityKey =
+      event.code === 'KeyT' ||
+      event.key.toLowerCase() === 't'
+
     if (
       !this.isMovementKey(
         event.code,
@@ -255,7 +301,8 @@ export class InputManager {
       event.code !== 'Space' &&
       event.code !== 'KeyE' &&
       event.code !== 'KeyQ' &&
-      !isIceKey
+      !isIceKey &&
+      !isElectricityKey
     ) {
       return
     }

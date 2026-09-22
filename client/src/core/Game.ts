@@ -16,6 +16,8 @@ import type { LevelConfig } from '../levels/LevelConfig'
 import { BombType } from '../entities/Bomb'
 import { WindSystem } from '../systems/WindSystem'
 import { IceSystem } from '../systems/IceSystem'
+import { NatureSystem } from '../systems/NatureSystem'
+import { ElectricitySystem } from '../systems/ElectricitySystem'
 
 export class Game {
   private readonly renderer: THREE.WebGLRenderer
@@ -37,6 +39,8 @@ export class Game {
   private steamSystem!: SteamSystem
   private windSystem!: WindSystem
   private iceSystem!: IceSystem
+  private natureSystem!: NatureSystem
+  private electricitySystem!: ElectricitySystem
 
   private readonly animationDebugElement: HTMLDivElement
   private readonly healthHudElement: HTMLDivElement
@@ -266,10 +270,22 @@ export class Game {
       this.player.gridY,
     )
 
+    this.natureSystem =
+      new NatureSystem(
+        this.arena,
+        this.player.gridX,
+        this.player.gridY,
+      )
+
     this.waterSystem =
       new WaterSystem(
         this.arena,
         (gridX, gridY) => {
+          this.natureSystem.growAt(
+            gridX,
+            gridY,
+          )
+
           console.info(
             `[WaterSystem] Water reached (${gridX}, ${gridY}).`,
           )
@@ -291,79 +307,134 @@ export class Game {
         this.arena,
       )
 
+    this.electricitySystem =
+      new ElectricitySystem(
+        this.arena,
+        this.waterSystem.isWaterAt.bind(
+          this.waterSystem,
+        ),
+        () => {
+          this.player.takeDamage()
+        },
+      )
+
     this.explosionSystem =
-    new ExplosionSystem(
+      new ExplosionSystem(
         this.arena,
 
-        (gridX, gridY) => {
-        this.enemySystem.handleExplosionCell(
+        (
+          gridX,
+          gridY,
+        ) => {
+          this.enemySystem.handleExplosionCell(
             gridX,
             gridY,
-        )
+          )
 
-        this.iceSystem.removeIceAt(
+          this.iceSystem.removeIceAt(
             gridX,
             gridY,
-        )
+          )
         },
 
-        (gridX, gridY) => {
-        return this.waterSystem.isWaterAt(
+        (
+          gridX,
+          gridY,
+        ) => {
+          return this.waterSystem.isWaterAt(
             gridX,
             gridY,
-        )
+          )
         },
 
-        (gridX, gridY) => {
-        const removed =
+        (
+          gridX,
+          gridY,
+        ) => {
+          const removed =
             this.waterSystem.removeWaterAt(
-            gridX,
-            gridY,
+              gridX,
+              gridY,
             )
 
-        if (!removed) {
+          if (!removed) {
             return
-        }
+          }
 
-        this.steamSystem.createSteam(
+          this.steamSystem.createSteam(
             gridX,
             gridY,
-        )
+          )
 
-        console.info(
+          console.info(
             `[Game] Fire met water at (${gridX}, ${gridY}). Water converted to steam.`,
-        )
+          )
         },
 
-        (gridX, gridY) => {
-        return this.iceSystem.isIceAt(
+        (
+          gridX,
+          gridY,
+        ) => {
+          return this.iceSystem.isIceAt(
             gridX,
             gridY,
-        )
+          )
         },
 
-        (gridX, gridY) => {
-        const melted =
+        (
+          gridX,
+          gridY,
+        ) => {
+          const melted =
             this.iceSystem.removeIceAt(
-            gridX,
-            gridY,
+              gridX,
+              gridY,
             )
 
-        if (!melted) {
+          if (!melted) {
             return
-        }
+          }
 
-        this.waterSystem.createWater(
+          this.waterSystem.createWater(
             gridX,
             gridY,
             0,
-        )
+          )
 
-        console.info(
+          console.info(
             `[Game] Fire met ice at (${gridX}, ${gridY}). Ice converted to water.`,
-        )
+          )
         },
-    )
+
+        (
+          gridX,
+          gridY,
+        ) => {
+          return this.natureSystem.isVegetationAt(
+            gridX,
+            gridY,
+          )
+        },
+
+        (
+          gridX,
+          gridY,
+        ) => {
+          const burning =
+            this.natureSystem.burnAt(
+              gridX,
+              gridY,
+            )
+
+          if (!burning) {
+            return
+          }
+
+          console.info(
+            `[Game] Fire started burning nature at (${gridX}, ${gridY}).`,
+          )
+        },
+      )
 
     this.windSystem =
       new WindSystem(
@@ -396,7 +467,10 @@ export class Game {
       new BombSystem(
         this.arena,
 
-        (gridX, gridY) => {
+        (
+          gridX,
+          gridY,
+        ) => {
           this.explosionSystem.createExplosion(
             gridX,
             gridY,
@@ -404,7 +478,10 @@ export class Game {
           )
         },
 
-        (gridX, gridY) => {
+        (
+          gridX,
+          gridY,
+        ) => {
           console.info(
             `[Game] Water bomb detonated at (${gridX}, ${gridY}).`,
           )
@@ -416,7 +493,10 @@ export class Game {
           )
         },
 
-        (gridX, gridY) => {
+        (
+          gridX,
+          gridY,
+        ) => {
           console.info(
             `[Game] Ice bomb detonated at (${gridX}, ${gridY}).`,
           )
@@ -425,6 +505,20 @@ export class Game {
             gridX,
             gridY,
             2,
+          )
+        },
+
+        (
+          gridX,
+          gridY,
+        ) => {
+          console.info(
+            `[Game] Electricity bomb detonated at (${gridX}, ${gridY}).`,
+          )
+
+          this.electricitySystem.createElectricity(
+            gridX,
+            gridY,
           )
         },
       )
@@ -594,6 +688,7 @@ export class Game {
       !this.levelManager.hasNextLevel()
     ) {
       this.showGameComplete()
+
       return
     }
 
@@ -602,6 +697,7 @@ export class Game {
 
     if (!advanced) {
       this.showGameComplete()
+
       return
     }
 
@@ -681,6 +777,12 @@ export class Game {
       }
 
       if (
+        this.inputManager.consumeElectricityPlacement()
+      ) {
+        this.tryPlaceElectricityBomb()
+      }
+
+      if (
         this.inputManager.consumeWind()
       ) {
         this.tryUseWind()
@@ -708,6 +810,16 @@ export class Game {
 
       this.iceSystem.update(
         deltaTime,
+      )
+
+      this.natureSystem.update(
+        deltaTime,
+      )
+
+      this.electricitySystem.update(
+        deltaTime,
+        this.player.gridX,
+        this.player.gridY,
       )
 
       this.player.object.visible =
@@ -848,6 +960,36 @@ export class Game {
 
     console.info(
       `[Game] Ice bomb placed. Remaining ice power: ${this.player.icePower}`,
+    )
+  }
+
+  private tryPlaceElectricityBomb(): void {
+    if (
+      this.player.electricityPower <= 0
+    ) {
+      console.info(
+        '[Game] Electricity bomb unavailable. Collect an Electricity power-up first.',
+      )
+
+      return
+    }
+
+    const placed =
+      this.bombSystem.placeBomb(
+        this.player.gridX,
+        this.player.gridY,
+        this.player.bombMaxCount,
+        BombType.Electricity,
+      )
+
+    if (!placed) {
+      return
+    }
+
+    this.player.electricityPower -= 1
+
+    console.info(
+      `[Game] Electricity bomb placed. Remaining electricity power: ${this.player.electricityPower}`,
     )
   }
 

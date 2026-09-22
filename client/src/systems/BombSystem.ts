@@ -34,6 +34,9 @@ export class BombSystem {
   private readonly onIceBombDetonate:
     BombDetonationHandler
 
+  private readonly onElectricityBombDetonate:
+    BombDetonationHandler
+
   public constructor(
     arena: Arena,
     onFireBombDetonate:
@@ -44,14 +47,23 @@ export class BombSystem {
     onIceBombDetonate:
       BombDetonationHandler = () =>
         undefined,
+    onElectricityBombDetonate:
+      BombDetonationHandler = () =>
+        undefined,
   ) {
     this.arena = arena
+
     this.onFireBombDetonate =
       onFireBombDetonate
+
     this.onWaterBombDetonate =
       onWaterBombDetonate
+
     this.onIceBombDetonate =
       onIceBombDetonate
+
+    this.onElectricityBombDetonate =
+      onElectricityBombDetonate
   }
 
   public get activeBombCount(): number {
@@ -147,13 +159,16 @@ export class BombSystem {
       console.info(
         `[BombSystem] Wind found no bomb at (${targetGridX}, ${targetGridY}).`,
       )
+
       return false
     }
 
     let currentGridX =
       targetGridX
+
     let currentGridY =
       targetGridY
+
     let movedDistance = 0
 
     for (
@@ -163,6 +178,7 @@ export class BombSystem {
     ) {
       const nextGridX =
         currentGridX + deltaX
+
       const nextGridY =
         currentGridY + deltaY
 
@@ -191,15 +207,23 @@ export class BombSystem {
         break
       }
 
-      currentGridX = nextGridX
-      currentGridY = nextGridY
-      movedDistance = distance
+      currentGridX =
+        nextGridX
+
+      currentGridY =
+        nextGridY
+
+      movedDistance =
+        distance
     }
 
-    if (movedDistance === 0) {
+    if (
+      movedDistance === 0
+    ) {
       console.info(
         `[BombSystem] Wind could not move bomb at (${targetGridX}, ${targetGridY}).`,
       )
+
       return false
     }
 
@@ -263,19 +287,32 @@ export class BombSystem {
           activeBomb.bomb.type
 
         activeBomb.bomb.object.removeFromParent()
-        this.bombs.delete(cellKey)
+
+        this.bombs.delete(
+          cellKey,
+        )
 
         if (
-          bombType === BombType.Water
+          bombType ===
+          BombType.Water
         ) {
           this.onWaterBombDetonate(
             gridX,
             gridY,
           )
         } else if (
-          bombType === BombType.Ice
+          bombType ===
+          BombType.Ice
         ) {
           this.onIceBombDetonate(
+            gridX,
+            gridY,
+          )
+        } else if (
+          bombType ===
+          BombType.Electricity
+        ) {
+          this.onElectricityBombDetonate(
             gridX,
             gridY,
           )
@@ -301,13 +338,28 @@ export class BombSystem {
   } {
     switch (direction) {
       case 'up':
-        return { deltaX: 0, deltaY: -1 }
+        return {
+          deltaX: 0,
+          deltaY: -1,
+        }
+
       case 'down':
-        return { deltaX: 0, deltaY: 1 }
+        return {
+          deltaX: 0,
+          deltaY: 1,
+        }
+
       case 'left':
-        return { deltaX: -1, deltaY: 0 }
+        return {
+          deltaX: -1,
+          deltaY: 0,
+        }
+
       case 'right':
-        return { deltaX: 1, deltaY: 0 }
+        return {
+          deltaX: 1,
+          deltaY: 0,
+        }
     }
   }
 

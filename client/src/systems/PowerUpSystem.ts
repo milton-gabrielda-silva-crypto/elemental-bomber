@@ -7,12 +7,13 @@ import {
   CellType,
 } from '../world/Arena'
 
-export const FIRE_POWERUP_DROP_CHANCE = 0.20
+export const FIRE_POWERUP_DROP_CHANCE = 0.15
 export const BOMB_POWERUP_DROP_CHANCE = 0.20
 export const SPEED_POWERUP_DROP_CHANCE = 0.20
 export const WATER_POWERUP_DROP_CHANCE = 0.15
 export const WIND_POWERUP_DROP_CHANCE = 0.05
 export const ICE_POWERUP_DROP_CHANCE = 0.15
+export const ELECTRICITY_POWERUP_DROP_CHANCE = 0.05
 
 export type PowerUpCollectionHandler =
   (type: PowerUpType) => void
@@ -159,6 +160,15 @@ export class PowerUpSystem {
       roll < threshold
     ) {
       return PowerUpType.Ice
+    }
+
+    threshold +=
+      ELECTRICITY_POWERUP_DROP_CHANCE
+
+    if (
+      roll < threshold
+    ) {
+      return PowerUpType.Electricity
     }
 
     return null

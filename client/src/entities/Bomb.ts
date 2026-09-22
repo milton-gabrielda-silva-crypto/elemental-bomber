@@ -4,6 +4,7 @@ export const BombType = {
   Fire: 'FIRE',
   Water: 'WATER',
   Ice: 'ICE',
+  Electricity: 'ELECTRICITY',
 } as const
 
 export type BombType =
@@ -79,6 +80,15 @@ export class Bomb {
       BombType.Ice
     ) {
       return this.createIceBomb(
+        bomb,
+      )
+    }
+
+    if (
+      this.type ===
+      BombType.Electricity
+    ) {
+      return this.createElectricityBomb(
         bomb,
       )
     }
@@ -413,6 +423,139 @@ export class Bomb {
       glow,
       shardLeft,
       shardRight,
+    )
+
+    return bomb
+  }
+
+  private createElectricityBomb(
+    bomb: THREE.Group,
+  ): THREE.Group {
+    const bodyMaterial =
+      new THREE.MeshStandardMaterial({
+        color: 0x17152b,
+        emissive: 0x27135c,
+        emissiveIntensity: 2,
+        roughness: 0.28,
+        metalness: 0.2,
+      })
+
+    const electricMaterial =
+      new THREE.MeshStandardMaterial({
+        color: 0x9b6cff,
+        emissive: 0x6a2cff,
+        emissiveIntensity: 6,
+        roughness: 0.12,
+        metalness: 0.15,
+      })
+
+    const glowMaterial =
+      new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0xbda8ff,
+        emissiveIntensity: 10,
+        roughness: 0.05,
+      })
+
+    const body =
+      new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.28,
+          24,
+          16,
+        ),
+        bodyMaterial,
+      )
+
+    const electricRing =
+      new THREE.Mesh(
+        new THREE.TorusGeometry(
+          0.31,
+          0.035,
+          8,
+          24,
+        ),
+        electricMaterial,
+      )
+
+    const electricRing2 =
+      new THREE.Mesh(
+        new THREE.TorusGeometry(
+          0.22,
+          0.025,
+          8,
+          20,
+        ),
+        electricMaterial,
+      )
+
+    const fuse =
+      new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          0.025,
+          0.025,
+          0.18,
+          8,
+        ),
+        electricMaterial,
+      )
+
+    const spark =
+      new THREE.Mesh(
+        new THREE.OctahedronGeometry(
+          0.07,
+          1,
+        ),
+        glowMaterial,
+      )
+
+    const bolt =
+      new THREE.Mesh(
+        new THREE.ConeGeometry(
+          0.075,
+          0.28,
+          4,
+        ),
+        glowMaterial,
+      )
+
+    body.position.y = 0.28
+
+    electricRing.position.y =
+      0.28
+    electricRing.rotation.x =
+      Math.PI / 2
+
+    electricRing2.position.y =
+      0.28
+    electricRing2.rotation.x =
+      Math.PI / 2
+
+    fuse.position.y = 0.63
+    fuse.rotation.z = -0.25
+
+    spark.position.set(
+      0.02,
+      0.72,
+      0,
+    )
+
+    bolt.position.set(
+      -0.14,
+      0.42,
+      0.02,
+    )
+
+    bolt.rotation.z =
+      -0.5
+
+    bomb.add(
+      body,
+      electricRing,
+      electricRing2,
+      fuse,
+      spark,
+      bolt,
     )
 
     return bomb

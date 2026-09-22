@@ -26,6 +26,7 @@ export const SPEED_POWERUP_AMOUNT = 1
 export const WATER_POWERUP_AMOUNT = 1
 export const WIND_POWERUP_AMOUNT = 1
 export const ICE_POWERUP_AMOUNT = 1
+export const ELECTRICITY_POWERUP_AMOUNT = 1
 
 export class Player {
   public readonly object: THREE.Group
@@ -37,6 +38,7 @@ export class Player {
   public waterPower = 0
   public windPower = 0
   public icePower = 0
+  public electricityPower = 0
 
   public readonly maxHealth = 3
   public health = this.maxHealth
@@ -306,6 +308,15 @@ export class Player {
 
       console.info(
         `[Player] Ice power-up collected. Ice power: ${this.icePower}`,
+      )
+    } else if (
+      type === 'ELECTRICITY'
+    ) {
+      this.electricityPower +=
+        ELECTRICITY_POWERUP_AMOUNT
+
+      console.info(
+        `[Player] Electricity power-up collected. Electricity power: ${this.electricityPower}`,
       )
     }
   }

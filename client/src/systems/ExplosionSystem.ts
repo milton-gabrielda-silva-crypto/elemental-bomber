@@ -45,6 +45,17 @@ export type IceImpactHandler = (
   segment: ExplosionSegment,
 ) => void
 
+export type NatureCellChecker = (
+  gridX: number,
+  gridY: number,
+) => boolean
+
+export type NatureImpactHandler = (
+  gridX: number,
+  gridY: number,
+  segment: ExplosionSegment,
+) => void
+
 export interface DestroyedDestructibleCell {
   gridX: number
   gridY: number
@@ -69,6 +80,10 @@ export class ExplosionSystem {
 
   private readonly onIceImpact: IceImpactHandler
 
+  private readonly isNatureAt: NatureCellChecker
+
+  private readonly onNatureImpact: NatureImpactHandler
+
   public constructor(
     arena: Arena,
     onExplosionCell: ExplosionCellHandler = () => undefined,
@@ -76,6 +91,8 @@ export class ExplosionSystem {
     onWaterImpact: WaterImpactHandler = () => undefined,
     isIceAt: IceCellChecker = () => false,
     onIceImpact: IceImpactHandler = () => undefined,
+    isNatureAt: NatureCellChecker = () => false,
+    onNatureImpact: NatureImpactHandler = () => undefined,
   ) {
     this.arena = arena
     this.onExplosionCell = onExplosionCell
@@ -83,6 +100,8 @@ export class ExplosionSystem {
     this.onWaterImpact = onWaterImpact
     this.isIceAt = isIceAt
     this.onIceImpact = onIceImpact
+    this.isNatureAt = isNatureAt
+    this.onNatureImpact = onNatureImpact
   }
 
   public createExplosion(
@@ -91,7 +110,7 @@ export class ExplosionSystem {
     blastRange = 2,
   ): void {
     /*
-     * FIRE + ICE
+     * FIRE + WATER
      *
      * If the explosion starts directly on water,
      * keep the existing Fire + Water -> Steam behavior.
@@ -113,8 +132,6 @@ export class ExplosionSystem {
 
     /*
      * Build the normal fire explosion.
-     *
-     * Ice is handled during propagation.
      */
     this.getExplosionCells(
       gridX,
@@ -270,15 +287,9 @@ export class ExplosionSystem {
           /*
            * FIRE + ICE -> WATER
            *
-           * Ice has priority over water here.
-           *
-           * The fire reaches the ice,
-           * the ice reaction is triggered,
-           * and propagation stops at that cell.
-           *
-           * The water created by the reaction
-           * will NOT be processed by this same
-           * explosion.
+           * Fire reaches the ice,
+           * the ice is converted to water,
+           * and the explosion stops there.
            */
           if (
             this.isIceAt(
@@ -304,7 +315,9 @@ export class ExplosionSystem {
           /*
            * FIRE + WATER -> STEAM
            *
-           * This is the existing reaction.
+           * Fire reaches the water,
+           * the water becomes steam,
+           * and the explosion stops there.
            */
           if (
             this.isWaterAt(
@@ -317,6 +330,35 @@ export class ExplosionSystem {
               targetGridY,
               segment,
             )
+
+            break
+          }
+
+          /*
+           * FIRE + NATURE
+           *
+           * Fire reaches vegetation,
+           * burns it,
+           * shows the explosion on that cell,
+           * and stops propagation there.
+           */
+          if (
+            this.isNatureAt(
+              targetGridX,
+              targetGridY,
+            )
+          ) {
+            this.onNatureImpact(
+              targetGridX,
+              targetGridY,
+              segment,
+            )
+
+            cells.push({
+              gridX: targetGridX,
+              gridY: targetGridY,
+              segment,
+            })
 
             break
           }
