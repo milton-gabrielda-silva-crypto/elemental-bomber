@@ -1,5 +1,11 @@
-import { Explosion, type ExplosionSegment } from '../entities/Explosion'
-import { Arena, CellType } from '../world/Arena'
+import {
+  Explosion,
+  type ExplosionSegment,
+} from '../entities/Explosion'
+import {
+  Arena,
+  CellType,
+} from '../world/Arena'
 
 interface ActiveExplosion {
   explosion: Explosion
@@ -28,6 +34,17 @@ export type WaterImpactHandler = (
   segment: ExplosionSegment,
 ) => void
 
+export type IceCellChecker = (
+  gridX: number,
+  gridY: number,
+) => boolean
+
+export type IceImpactHandler = (
+  gridX: number,
+  gridY: number,
+  segment: ExplosionSegment,
+) => void
+
 export interface DestroyedDestructibleCell {
   gridX: number
   gridY: number
@@ -48,16 +65,24 @@ export class ExplosionSystem {
 
   private readonly onWaterImpact: WaterImpactHandler
 
+  private readonly isIceAt: IceCellChecker
+
+  private readonly onIceImpact: IceImpactHandler
+
   public constructor(
     arena: Arena,
     onExplosionCell: ExplosionCellHandler = () => undefined,
     isWaterAt: WaterCellChecker = () => false,
     onWaterImpact: WaterImpactHandler = () => undefined,
+    isIceAt: IceCellChecker = () => false,
+    onIceImpact: IceImpactHandler = () => undefined,
   ) {
     this.arena = arena
     this.onExplosionCell = onExplosionCell
     this.isWaterAt = isWaterAt
     this.onWaterImpact = onWaterImpact
+    this.isIceAt = isIceAt
+    this.onIceImpact = onIceImpact
   }
 
   public createExplosion(
@@ -65,6 +90,12 @@ export class ExplosionSystem {
     gridY: number,
     blastRange = 2,
   ): void {
+    /*
+     * FIRE + ICE
+     *
+     * If the explosion starts directly on water,
+     * keep the existing Fire + Water -> Steam behavior.
+     */
     if (
       this.isWaterAt(
         gridX,
@@ -80,6 +111,11 @@ export class ExplosionSystem {
       return
     }
 
+    /*
+     * Build the normal fire explosion.
+     *
+     * Ice is handled during propagation.
+     */
     this.getExplosionCells(
       gridX,
       gridY,
@@ -231,6 +267,45 @@ export class ExplosionSystem {
             break
           }
 
+          /*
+           * FIRE + ICE -> WATER
+           *
+           * Ice has priority over water here.
+           *
+           * The fire reaches the ice,
+           * the ice reaction is triggered,
+           * and propagation stops at that cell.
+           *
+           * The water created by the reaction
+           * will NOT be processed by this same
+           * explosion.
+           */
+          if (
+            this.isIceAt(
+              targetGridX,
+              targetGridY,
+            )
+          ) {
+            this.onIceImpact(
+              targetGridX,
+              targetGridY,
+              segment,
+            )
+
+            cells.push({
+              gridX: targetGridX,
+              gridY: targetGridY,
+              segment,
+            })
+
+            break
+          }
+
+          /*
+           * FIRE + WATER -> STEAM
+           *
+           * This is the existing reaction.
+           */
           if (
             this.isWaterAt(
               targetGridX,

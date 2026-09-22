@@ -292,49 +292,78 @@ export class Game {
       )
 
     this.explosionSystem =
-      new ExplosionSystem(
+    new ExplosionSystem(
         this.arena,
 
         (gridX, gridY) => {
-          this.enemySystem.handleExplosionCell(
+        this.enemySystem.handleExplosionCell(
             gridX,
             gridY,
-          )
+        )
 
-          this.iceSystem.removeIceAt(
+        this.iceSystem.removeIceAt(
             gridX,
             gridY,
-          )
+        )
         },
 
         (gridX, gridY) => {
-          return this.waterSystem.isWaterAt(
+        return this.waterSystem.isWaterAt(
             gridX,
             gridY,
-          )
+        )
         },
 
         (gridX, gridY) => {
-          const removed =
+        const removed =
             this.waterSystem.removeWaterAt(
-              gridX,
-              gridY,
+            gridX,
+            gridY,
             )
 
-          if (!removed) {
+        if (!removed) {
             return
-          }
+        }
 
-          this.steamSystem.createSteam(
+        this.steamSystem.createSteam(
             gridX,
             gridY,
-          )
+        )
 
-          console.info(
+        console.info(
             `[Game] Fire met water at (${gridX}, ${gridY}). Water converted to steam.`,
-          )
+        )
         },
-      )
+
+        (gridX, gridY) => {
+        return this.iceSystem.isIceAt(
+            gridX,
+            gridY,
+        )
+        },
+
+        (gridX, gridY) => {
+        const melted =
+            this.iceSystem.removeIceAt(
+            gridX,
+            gridY,
+            )
+
+        if (!melted) {
+            return
+        }
+
+        this.waterSystem.createWater(
+            gridX,
+            gridY,
+            0,
+        )
+
+        console.info(
+            `[Game] Fire met ice at (${gridX}, ${gridY}). Ice converted to water.`,
+        )
+        },
+    )
 
     this.windSystem =
       new WindSystem(
