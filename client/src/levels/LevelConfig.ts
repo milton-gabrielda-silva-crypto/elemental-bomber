@@ -1,3 +1,5 @@
+import type { EnemyElement } from '../entities/Enemy'
+
 export interface LevelConfig {
   id: string
   name: string
@@ -18,6 +20,7 @@ export interface LevelConfig {
   destructiblePositions: string[]
 
   enemyCount: number
+  enemyTypes: EnemyElement[]
 }
 
 export const STAGE_1_1: LevelConfig = {
@@ -70,6 +73,10 @@ export const STAGE_1_1: LevelConfig = {
   ],
 
   enemyCount: 1,
+
+  enemyTypes: [
+    'NORMAL',
+  ],
 }
 
 export const STAGE_1_2: LevelConfig = {
@@ -121,4 +128,9 @@ export const STAGE_1_2: LevelConfig = {
   ],
 
   enemyCount: 2,
+
+  enemyTypes: [
+    'NORMAL',
+    'FIRE',
+  ],
 }

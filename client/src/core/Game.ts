@@ -265,7 +265,7 @@ export class Game {
       )
 
     this.enemySystem.spawnEnemies(
-      config.enemyCount,
+      config.enemyTypes,
       this.player.gridX,
       this.player.gridY,
     )

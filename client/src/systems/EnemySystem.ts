@@ -1,4 +1,5 @@
 import { Enemy } from '../entities/Enemy'
+import type { EnemyElement } from '../entities/Enemy'
 import { Arena } from '../world/Arena'
 
 export type EnemyPlayerCollisionHandler = (
@@ -29,6 +30,7 @@ export class EnemySystem {
   public spawnInitialEnemy(
     playerGridX: number,
     playerGridY: number,
+    element: EnemyElement = 'NORMAL',
   ): Enemy | null {
     const spawnCell =
       this.findFarthestWalkableCell(
@@ -45,11 +47,12 @@ export class EnemySystem {
     return this.spawnEnemy(
       spawnCell.gridX,
       spawnCell.gridY,
+      element,
     )
   }
 
   public spawnEnemies(
-    count: number,
+    elements: EnemyElement[],
     playerGridX: number,
     playerGridY: number,
   ): number {
@@ -65,15 +68,19 @@ export class EnemySystem {
       const candidate of candidates
     ) {
       if (
-        spawnedCount >= count
+        spawnedCount >= elements.length
       ) {
         break
       }
+
+      const element =
+        elements[spawnedCount]
 
       const enemy =
         this.spawnEnemy(
           candidate.gridX,
           candidate.gridY,
+          element,
         )
 
       if (
@@ -84,7 +91,7 @@ export class EnemySystem {
     }
 
     console.info(
-      `[EnemySystem] Spawned ${spawnedCount}/${count} enemies.`,
+      `[EnemySystem] Spawned ${spawnedCount}/${elements.length} enemies.`,
     )
 
     return spawnedCount
@@ -93,6 +100,7 @@ export class EnemySystem {
   public spawnEnemy(
     gridX: number,
     gridY: number,
+    element: EnemyElement = 'NORMAL',
   ): Enemy | null {
     if (
       !this.arena.isWalkable(
@@ -113,6 +121,7 @@ export class EnemySystem {
         this.arena,
         gridX,
         gridY,
+        element,
       )
 
     this.enemies.push(
@@ -124,7 +133,7 @@ export class EnemySystem {
     )
 
     console.info(
-      `[EnemySystem] Enemy spawned at (${gridX}, ${gridY}).`,
+      `[EnemySystem] ${element} enemy spawned at (${gridX}, ${gridY}).`,
     )
 
     return enemy
@@ -135,11 +144,6 @@ export class EnemySystem {
     playerGridX: number,
     playerGridY: number,
   ): void {
-    /*
-     * The Enemy now receives the player's
-     * current grid position and calculates
-     * a path toward the player.
-     */
     this.enemies.forEach(
       (enemy) => {
         enemy.update(
@@ -175,7 +179,7 @@ export class EnemySystem {
           )
 
           console.warn(
-            `[EnemySystem] Enemy/player collision at (${enemy.gridX}, ${enemy.gridY}).`,
+            `[EnemySystem] ${enemy.element} enemy/player collision at (${enemy.gridX}, ${enemy.gridY}).`,
           )
 
           this.onPlayerCollision(
@@ -211,7 +215,7 @@ export class EnemySystem {
           )
 
           console.info(
-            `[EnemySystem] Enemy destroyed at (${gridX}, ${gridY}).`,
+            `[EnemySystem] ${enemy.element} enemy destroyed at (${gridX}, ${gridY}).`,
           )
         }
       },

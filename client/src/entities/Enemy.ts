@@ -7,6 +7,14 @@ export type EnemyDirection =
   | 'left'
   | 'right'
 
+export type EnemyElement =
+  | 'NORMAL'
+  | 'FIRE'
+  | 'WATER'
+  | 'ICE'
+  | 'NATURE'
+  | 'ELECTRICITY'
+
 interface DirectionData {
   deltaX: number
   deltaY: number
@@ -18,11 +26,21 @@ interface GridPosition {
   gridY: number
 }
 
+interface EnemyVisualStyle {
+  color: number
+  emissive: number
+  emissiveIntensity: number
+}
+
 export class Enemy {
   public readonly object: THREE.Group
   public readonly movementSpeed = 2
+
+  public readonly element: EnemyElement
+
   public gridX: number
   public gridY: number
+
   public direction: EnemyDirection = 'down'
   public isAlive = true
 
@@ -40,12 +58,15 @@ export class Enemy {
     arena: Arena,
     gridX: number,
     gridY: number,
+    element: EnemyElement = 'NORMAL',
   ) {
     this.arena = arena
     this.gridX = gridX
     this.gridY = gridY
     this.targetGridX = gridX
     this.targetGridY = gridY
+    this.element = element
+
     this.object = this.createObject()
 
     this.object.position.copy(
@@ -155,11 +176,15 @@ export class Enemy {
     const enemy =
       new THREE.Group()
 
+    const visualStyle =
+      this.getVisualStyle()
+
     const bodyMaterial =
       new THREE.MeshStandardMaterial({
-        color: 0xb83bdb,
-        emissive: 0x43105e,
-        emissiveIntensity: 0.8,
+        color: visualStyle.color,
+        emissive: visualStyle.emissive,
+        emissiveIntensity:
+          visualStyle.emissiveIntensity,
         roughness: 0.55,
       })
 
@@ -266,6 +291,54 @@ export class Enemy {
     return enemy
   }
 
+  private getVisualStyle():
+    EnemyVisualStyle {
+    switch (this.element) {
+      case 'FIRE':
+        return {
+          color: 0xf04422,
+          emissive: 0x7a1608,
+          emissiveIntensity: 1.2,
+        }
+
+      case 'WATER':
+        return {
+          color: 0x2196f3,
+          emissive: 0x063b78,
+          emissiveIntensity: 1.1,
+        }
+
+      case 'ICE':
+        return {
+          color: 0x7ddcff,
+          emissive: 0x0b6688,
+          emissiveIntensity: 1.2,
+        }
+
+      case 'NATURE':
+        return {
+          color: 0x55b947,
+          emissive: 0x123d0d,
+          emissiveIntensity: 0.9,
+        }
+
+      case 'ELECTRICITY':
+        return {
+          color: 0xc65cff,
+          emissive: 0x5a0c82,
+          emissiveIntensity: 1.4,
+        }
+
+      case 'NORMAL':
+      default:
+        return {
+          color: 0xb83bdb,
+          emissive: 0x43105e,
+          emissiveIntensity: 0.8,
+        }
+    }
+  }
+
   private chooseDirection(
     playerGridX: number,
     playerGridY: number,
@@ -289,9 +362,10 @@ export class Enemy {
     }
 
     /*
-     * If the player is directly adjacent,
-     * move into the player's cell so the
-     * EnemySystem can detect the collision.
+     * If the enemy is already on the
+     * player's cell, do not start another
+     * movement. EnemySystem handles the
+     * collision.
      */
     if (
       path.length === 1
@@ -301,8 +375,7 @@ export class Enemy {
 
     /*
      * If no path exists, keep the enemy
-     * moving using its existing fallback
-     * behavior.
+     * moving using the fallback behavior.
      */
     return this.chooseFallbackDirection()
   }
@@ -404,10 +477,10 @@ export class Enemy {
         }
 
         /*
-         * The player's current cell is allowed
-         * as a destination so the enemy can
-         * actually reach the player and trigger
-         * the collision system.
+         * The player's current cell is
+         * allowed as a destination so the
+         * enemy can reach the player and
+         * trigger the collision system.
          */
         const isPlayerCell =
           neighbor.gridX ===
