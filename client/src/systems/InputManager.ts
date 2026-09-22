@@ -23,6 +23,7 @@ export class InputManager {
   private requestedBombPlacement = false
   private requestedWaterPlacement = false
   private requestedWind = false
+  private requestedIcePlacement = false
 
   public constructor() {
     window.addEventListener(
@@ -114,6 +115,15 @@ export class InputManager {
     return shouldPlaceWater
   }
 
+  public consumeIcePlacement(): boolean {
+    const shouldPlaceIce =
+      this.requestedIcePlacement
+
+    this.requestedIcePlacement = false
+
+    return shouldPlaceIce
+  }
+
   public dispose(): void {
     window.removeEventListener(
       'keydown',
@@ -140,10 +150,33 @@ export class InputManager {
       event.code === 'Space'
 
     const isWaterKey =
-      event.code === 'KeyE'
+      event.code === 'KeyE' ||
+      event.key.toLowerCase() === 'e'
 
     const isWindKey =
-      event.code === 'KeyQ'
+      event.code === 'KeyQ' ||
+      event.key.toLowerCase() === 'q'
+
+    const isIceKey =
+      event.code === 'KeyR' ||
+      event.key.toLowerCase() === 'r'
+
+    /*
+     * Debug log specifically for R.
+     *
+     * This lets us verify that the browser is actually
+     * sending the R key to the game.
+     */
+    if (isIceKey) {
+      console.info(
+        '[InputManager] R key detected.',
+        {
+          code: event.code,
+          key: event.key,
+          repeat: event.repeat,
+        },
+      )
+    }
 
     if (
       !this.isMovementKey(
@@ -152,7 +185,8 @@ export class InputManager {
       debugAnimation === null &&
       !isBombKey &&
       !isWaterKey &&
-      !isWindKey
+      !isWindKey &&
+      !isIceKey
     ) {
       return
     }
@@ -194,18 +228,34 @@ export class InputManager {
     ) {
       this.requestedWind = true
     }
+
+    if (
+      isIceKey &&
+      !event.repeat
+    ) {
+      this.requestedIcePlacement = true
+
+      console.info(
+        '[InputManager] Ice placement requested.',
+      )
+    }
   }
 
   private readonly handleKeyUp = (
     event: KeyboardEvent,
   ): void => {
+    const isIceKey =
+      event.code === 'KeyR' ||
+      event.key.toLowerCase() === 'r'
+
     if (
       !this.isMovementKey(
         event.code,
       ) &&
       event.code !== 'Space' &&
       event.code !== 'KeyE' &&
-      event.code !== 'KeyQ'
+      event.code !== 'KeyQ' &&
+      !isIceKey
     ) {
       return
     }

@@ -3,7 +3,10 @@ import {
   BombType,
 } from '../entities/Bomb'
 import type { MovementDirection } from './InputManager'
-import { Arena, CellType } from '../world/Arena'
+import {
+  Arena,
+  CellType,
+} from '../world/Arena'
 
 export type BombDetonationHandler = (
   gridX: number,
@@ -28,17 +31,27 @@ export class BombSystem {
   private readonly onWaterBombDetonate:
     BombDetonationHandler
 
+  private readonly onIceBombDetonate:
+    BombDetonationHandler
+
   public constructor(
     arena: Arena,
-    onFireBombDetonate: BombDetonationHandler,
-    onWaterBombDetonate: BombDetonationHandler = () =>
-      undefined,
+    onFireBombDetonate:
+      BombDetonationHandler,
+    onWaterBombDetonate:
+      BombDetonationHandler = () =>
+        undefined,
+    onIceBombDetonate:
+      BombDetonationHandler = () =>
+        undefined,
   ) {
     this.arena = arena
     this.onFireBombDetonate =
       onFireBombDetonate
     this.onWaterBombDetonate =
       onWaterBombDetonate
+    this.onIceBombDetonate =
+      onIceBombDetonate
   }
 
   public get activeBombCount(): number {
@@ -49,7 +62,8 @@ export class BombSystem {
     gridX: number,
     gridY: number,
     maxBombCount: number,
-    type: BombType = BombType.Fire,
+    type: BombType =
+      BombType.Fire,
   ): boolean {
     const cellKey =
       this.getCellKey(
@@ -65,11 +79,12 @@ export class BombSystem {
       return false
     }
 
-    const bomb = new Bomb(
-      gridX,
-      gridY,
-      type,
-    )
+    const bomb =
+      new Bomb(
+        gridX,
+        gridY,
+        type,
+      )
 
     bomb.object.position.copy(
       this.arena.gridToWorld(
@@ -104,11 +119,17 @@ export class BombSystem {
     direction: MovementDirection,
     maxDistance = 3,
   ): boolean {
-    const { deltaX, deltaY } =
-      this.getDirectionData(direction)
+    const {
+      deltaX,
+      deltaY,
+    } =
+      this.getDirectionData(
+        direction,
+      )
 
     const targetGridX =
       playerGridX + deltaX
+
     const targetGridY =
       playerGridY + deltaY
 
@@ -120,7 +141,9 @@ export class BombSystem {
         ),
       )
 
-    if (activeBomb === undefined) {
+    if (
+      activeBomb === undefined
+    ) {
       console.info(
         `[BombSystem] Wind found no bomb at (${targetGridX}, ${targetGridY}).`,
       )
@@ -240,16 +263,19 @@ export class BombSystem {
           activeBomb.bomb.type
 
         activeBomb.bomb.object.removeFromParent()
-
-        this.bombs.delete(
-          cellKey,
-        )
+        this.bombs.delete(cellKey)
 
         if (
-          bombType ===
-          BombType.Water
+          bombType === BombType.Water
         ) {
           this.onWaterBombDetonate(
+            gridX,
+            gridY,
+          )
+        } else if (
+          bombType === BombType.Ice
+        ) {
+          this.onIceBombDetonate(
             gridX,
             gridY,
           )
@@ -275,25 +301,13 @@ export class BombSystem {
   } {
     switch (direction) {
       case 'up':
-        return {
-          deltaX: 0,
-          deltaY: -1,
-        }
+        return { deltaX: 0, deltaY: -1 }
       case 'down':
-        return {
-          deltaX: 0,
-          deltaY: 1,
-        }
+        return { deltaX: 0, deltaY: 1 }
       case 'left':
-        return {
-          deltaX: -1,
-          deltaY: 0,
-        }
+        return { deltaX: -1, deltaY: 0 }
       case 'right':
-        return {
-          deltaX: 1,
-          deltaY: 0,
-        }
+        return { deltaX: 1, deltaY: 0 }
     }
   }
 

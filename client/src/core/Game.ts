@@ -15,6 +15,7 @@ import { LevelManager } from '../levels/LevelManager'
 import type { LevelConfig } from '../levels/LevelConfig'
 import { BombType } from '../entities/Bomb'
 import { WindSystem } from '../systems/WindSystem'
+import { IceSystem } from '../systems/IceSystem'
 
 export class Game {
   private readonly renderer: THREE.WebGLRenderer
@@ -35,6 +36,7 @@ export class Game {
   private waterSystem!: WaterSystem
   private steamSystem!: SteamSystem
   private windSystem!: WindSystem
+  private iceSystem!: IceSystem
 
   private readonly animationDebugElement: HTMLDivElement
   private readonly healthHudElement: HTMLDivElement
@@ -284,12 +286,22 @@ export class Game {
         },
       )
 
+    this.iceSystem =
+      new IceSystem(
+        this.arena,
+      )
+
     this.explosionSystem =
       new ExplosionSystem(
         this.arena,
 
         (gridX, gridY) => {
           this.enemySystem.handleExplosionCell(
+            gridX,
+            gridY,
+          )
+
+          this.iceSystem.removeIceAt(
             gridX,
             gridY,
           )
@@ -369,6 +381,18 @@ export class Game {
           )
 
           this.waterSystem.createWater(
+            gridX,
+            gridY,
+            2,
+          )
+        },
+
+        (gridX, gridY) => {
+          console.info(
+            `[Game] Ice bomb detonated at (${gridX}, ${gridY}).`,
+          )
+
+          this.iceSystem.createIce(
             gridX,
             gridY,
             2,
@@ -622,6 +646,12 @@ export class Game {
       }
 
       if (
+        this.inputManager.consumeIcePlacement()
+      ) {
+        this.tryPlaceIceBomb()
+      }
+
+      if (
         this.inputManager.consumeWind()
       ) {
         this.tryUseWind()
@@ -644,6 +674,10 @@ export class Game {
       )
 
       this.windSystem.update(
+        deltaTime,
+      )
+
+      this.iceSystem.update(
         deltaTime,
       )
 
@@ -755,6 +789,36 @@ export class Game {
 
     console.info(
       `[Game] Water bomb placed. Remaining water power: ${this.player.waterPower}`,
+    )
+  }
+
+  private tryPlaceIceBomb(): void {
+    if (
+      this.player.icePower <= 0
+    ) {
+      console.info(
+        '[Game] Ice bomb unavailable. Collect an Ice power-up first.',
+      )
+
+      return
+    }
+
+    const placed =
+      this.bombSystem.placeBomb(
+        this.player.gridX,
+        this.player.gridY,
+        this.player.bombMaxCount,
+        BombType.Ice,
+      )
+
+    if (!placed) {
+      return
+    }
+
+    this.player.icePower -= 1
+
+    console.info(
+      `[Game] Ice bomb placed. Remaining ice power: ${this.player.icePower}`,
     )
   }
 

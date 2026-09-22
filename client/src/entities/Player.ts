@@ -25,6 +25,7 @@ const returnToIdleAnimations =
 export const SPEED_POWERUP_AMOUNT = 1
 export const WATER_POWERUP_AMOUNT = 1
 export const WIND_POWERUP_AMOUNT = 1
+export const ICE_POWERUP_AMOUNT = 1
 
 export class Player {
   public readonly object: THREE.Group
@@ -35,6 +36,7 @@ export class Player {
   public bombMaxCount = 1
   public waterPower = 0
   public windPower = 0
+  public icePower = 0
 
   public readonly maxHealth = 3
   public health = this.maxHealth
@@ -295,6 +297,15 @@ export class Player {
 
       console.info(
         `[Player] Wind power-up collected. Wind power: ${this.windPower}`,
+      )
+    } else if (
+      type === 'ICE'
+    ) {
+      this.icePower +=
+        ICE_POWERUP_AMOUNT
+
+      console.info(
+        `[Player] Ice power-up collected. Ice power: ${this.icePower}`,
       )
     }
   }
@@ -660,6 +671,7 @@ export class Player {
       this.slidingDirection === null
     ) {
       this.sliding = false
+
       return
     }
 

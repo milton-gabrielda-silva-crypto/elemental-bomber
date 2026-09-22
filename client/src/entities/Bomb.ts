@@ -3,6 +3,7 @@ import * as THREE from 'three'
 export const BombType = {
   Fire: 'FIRE',
   Water: 'WATER',
+  Ice: 'ICE',
 } as const
 
 export type BombType =
@@ -27,14 +28,23 @@ export class Bomb {
     this.object = this.createObject()
   }
 
-  public moveTo(gridX: number, gridY: number, worldPosition: THREE.Vector3): void {
+  public moveTo(
+    gridX: number,
+    gridY: number,
+    worldPosition: THREE.Vector3,
+  ): void {
     this.gridX = gridX
     this.gridY = gridY
-    this.object.position.copy(worldPosition)
+    this.object.position.copy(
+      worldPosition,
+    )
   }
 
-  public update(deltaTime: number): void {
-    this.elapsedTime += deltaTime
+  public update(
+    deltaTime: number,
+  ): void {
+    this.elapsedTime +=
+      deltaTime
 
     const pulse =
       1 +
@@ -52,12 +62,23 @@ export class Bomb {
   }
 
   private createObject(): THREE.Group {
-    const bomb = new THREE.Group()
+    const bomb =
+      new THREE.Group()
 
     if (
-      this.type === BombType.Water
+      this.type ===
+      BombType.Water
     ) {
       return this.createWaterBomb(
+        bomb,
+      )
+    }
+
+    if (
+      this.type ===
+      BombType.Ice
+    ) {
+      return this.createIceBomb(
         bomb,
       )
     }
@@ -89,33 +110,36 @@ export class Bomb {
         emissiveIntensity: 2,
       })
 
-    const body = new THREE.Mesh(
-      new THREE.SphereGeometry(
-        0.28,
-        24,
-        16,
-      ),
-      bodyMaterial,
-    )
+    const body =
+      new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.28,
+          24,
+          16,
+        ),
+        bodyMaterial,
+      )
 
-    const fuse = new THREE.Mesh(
-      new THREE.CylinderGeometry(
-        0.025,
-        0.025,
-        0.18,
-        8,
-      ),
-      fuseMaterial,
-    )
+    const fuse =
+      new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          0.025,
+          0.025,
+          0.18,
+          8,
+        ),
+        fuseMaterial,
+      )
 
-    const spark = new THREE.Mesh(
-      new THREE.SphereGeometry(
-        0.06,
-        12,
-        8,
-      ),
-      sparkMaterial,
-    )
+    const spark =
+      new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.06,
+          12,
+          8,
+        ),
+        sparkMaterial,
+      )
 
     body.position.y = 0.28
 
@@ -166,52 +190,57 @@ export class Bomb {
         roughness: 0.1,
       })
 
-    const body = new THREE.Mesh(
-      new THREE.SphereGeometry(
-        0.28,
-        24,
-        16,
-      ),
-      bodyMaterial,
-    )
+    const body =
+      new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.28,
+          24,
+          16,
+        ),
+        bodyMaterial,
+      )
 
-    const waterRing = new THREE.Mesh(
-      new THREE.TorusGeometry(
-        0.3,
-        0.035,
-        8,
-        24,
-      ),
-      waterMaterial,
-    )
+    const waterRing =
+      new THREE.Mesh(
+        new THREE.TorusGeometry(
+          0.3,
+          0.035,
+          8,
+          24,
+        ),
+        waterMaterial,
+      )
 
-    const fuse = new THREE.Mesh(
-      new THREE.CylinderGeometry(
-        0.025,
-        0.025,
-        0.18,
-        8,
-      ),
-      waterMaterial,
-    )
+    const fuse =
+      new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          0.025,
+          0.025,
+          0.18,
+          8,
+        ),
+        waterMaterial,
+      )
 
-    const spark = new THREE.Mesh(
-      new THREE.SphereGeometry(
-        0.065,
-        12,
-        8,
-      ),
-      glowMaterial,
-    )
+    const spark =
+      new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.065,
+          12,
+          8,
+        ),
+        glowMaterial,
+      )
 
-    const droplet = new THREE.Mesh(
-      new THREE.SphereGeometry(
-        0.07,
-        12,
-        8,
-      ),
-      glowMaterial,
-    )
+    const droplet =
+      new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.07,
+          12,
+          8,
+        ),
+        glowMaterial,
+      )
 
     body.position.y = 0.28
 
@@ -240,6 +269,150 @@ export class Bomb {
       fuse,
       spark,
       droplet,
+    )
+
+    return bomb
+  }
+
+  private createIceBomb(
+    bomb: THREE.Group,
+  ): THREE.Group {
+    const iceMaterial =
+      new THREE.MeshStandardMaterial({
+        color: 0x66d9ff,
+        emissive: 0x168dcc,
+        emissiveIntensity: 2.5,
+        roughness: 0.12,
+        metalness: 0.08,
+        transparent: true,
+        opacity: 0.94,
+      })
+
+    const crystalMaterial =
+      new THREE.MeshStandardMaterial({
+        color: 0xdffaff,
+        emissive: 0x72ddff,
+        emissiveIntensity: 4,
+        roughness: 0.08,
+        metalness: 0.05,
+        transparent: true,
+        opacity: 0.9,
+      })
+
+    const body =
+      new THREE.Mesh(
+        new THREE.IcosahedronGeometry(
+          0.29,
+          1,
+        ),
+        iceMaterial,
+      )
+
+    const innerCrystal =
+      new THREE.Mesh(
+        new THREE.OctahedronGeometry(
+          0.16,
+          1,
+        ),
+        crystalMaterial,
+      )
+
+    const ring =
+      new THREE.Mesh(
+        new THREE.TorusGeometry(
+          0.32,
+          0.035,
+          8,
+          24,
+        ),
+        crystalMaterial,
+      )
+
+    const fuse =
+      new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          0.025,
+          0.025,
+          0.18,
+          8,
+        ),
+        iceMaterial,
+      )
+
+    const glow =
+      new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.07,
+          12,
+          8,
+        ),
+        crystalMaterial,
+      )
+
+    const shardLeft =
+      new THREE.Mesh(
+        new THREE.ConeGeometry(
+          0.055,
+          0.2,
+          6,
+        ),
+        iceMaterial,
+      )
+
+    const shardRight =
+      new THREE.Mesh(
+        new THREE.ConeGeometry(
+          0.05,
+          0.18,
+          6,
+        ),
+        crystalMaterial,
+      )
+
+    body.position.y = 0.3
+
+    innerCrystal.position.y =
+      0.3
+
+    ring.position.y = 0.3
+    ring.rotation.x =
+      Math.PI / 2
+
+    fuse.position.y = 0.65
+    fuse.rotation.z = -0.25
+
+    glow.position.set(
+      0.02,
+      0.74,
+      0,
+    )
+
+    shardLeft.position.set(
+      -0.22,
+      0.36,
+      0,
+    )
+
+    shardLeft.rotation.z =
+      -0.35
+
+    shardRight.position.set(
+      0.2,
+      0.48,
+      0,
+    )
+
+    shardRight.rotation.z =
+      0.4
+
+    bomb.add(
+      body,
+      innerCrystal,
+      ring,
+      fuse,
+      glow,
+      shardLeft,
+      shardRight,
     )
 
     return bomb
